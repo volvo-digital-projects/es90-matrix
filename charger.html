@@ -350,9 +350,12 @@ function resetChargerToDefaults(){
 province.onchange=()=>{previewLocation('province');requestAnimationFrame(fillDistricts)};
 district.onchange=()=>{previewLocation('district');requestAnimationFrame(fillNeighborhoods)};
 neighborhood.onchange=()=>previewLocation('neighborhood');
-loadAdministrativeAreas().catch(()=>{}).finally(()=>{
+loadAdministrativeAreas().then(()=>{
   chargerPageReady=true;
   resetChargerToDefaults();
+}).catch(error=>{
+  console.error(error);
+  notice('행정구역 좌표를 검증하지 못해 충전소 검색을 시작하지 않았습니다.');
 });
 window.addEventListener('pageshow',event=>{
   if(event.persisted && chargerPageReady) requestAnimationFrame(resetChargerToDefaults);
