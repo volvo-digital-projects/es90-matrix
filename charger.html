@@ -150,10 +150,9 @@ async function loadAdministrativeAreas(){
   ]);
   if(!response.ok)throw new Error('행정동 데이터를 불러오지 못했습니다.');
   const data=await response.json();
-  if(centerResponse.ok){
-    const centerData=await centerResponse.json();
-    administrativeCenters=centerData.centers||{};
-  }
+  if(!centerResponse.ok)throw new Error('행정구역 중심좌표 데이터를 불러오지 못했습니다.');
+  const centerData=await centerResponse.json();
+  administrativeCenters=centerData.centers||{};
   if(!chargerResponse.ok)throw new Error('실제 충전소 데이터를 불러오지 못했습니다.');
   const chargerData=await chargerResponse.json();
   const versionData=versionResponse.ok?await versionResponse.json():{};
@@ -172,6 +171,12 @@ async function loadAdministrativeAreas(){
     });
   });
   if(!Object.keys(nextRegions).length)throw new Error('행정동 데이터가 비어 있습니다.');
+  const missingCenters=[];
+  Object.entries(data.regions||{}).forEach(([sido,districts])=>Object.entries(districts).forEach(([sigungu,dongs])=>{
+    if(!administrativeCenters[`${sido}|${sigungu}`])missingCenters.push(`${sido}|${sigungu}`);
+    dongs.forEach(dong=>{if(!administrativeCenters[`${sido}|${sigungu}|${dong}`])missingCenters.push(`${sido}|${sigungu}|${dong}`)});
+  }));
+  if(missingCenters.length)throw new Error(`행정구역 좌표 검증 실패: ${missingCenters.slice(0,3).join(', ')}${missingCenters.length>3?' 외':''}`);
   regions=nextRegions;
   neighborhoods=nextNeighborhoods;
 }
@@ -182,7 +187,7 @@ const koreanSort=(a,b)=>{const left=String(a).normalize('NFC'),right=String(b).n
 function fillProvinces(){province.innerHTML=promptOption()+Object.keys(regions).sort(koreanSort).map(x=>`<option value="${x}">${x}</option>`).join('');district.innerHTML=promptOption();neighborhood.innerHTML=promptOption()}
 function fillDistricts(){const items=[...(regions[province.value]||[])].sort(koreanSort);district.innerHTML=promptOption()+items.map(x=>`<option value="${x}">${x}</option>`).join('');neighborhood.innerHTML=promptOption()}
 function fillNeighborhoods(){const items=neighborhoods[`${province.value}|${district.value}`]||[];const sorted=items.filter(x=>x!=='전체').sort(koreanSort);neighborhood.innerHTML=promptOption()+sorted.map(x=>`<option value="${x}">${x}</option>`).join('')}
-function getSelectedMapCenter(){const p=province.value,d=district.value,n=neighborhood.value;return (n&&n!=='전체'&&administrativeCenters[`${p}|${d}|${n}`])||administrativeCenters[`${p}|${d}`]||regionCenters[p]||regionCenters['서울특별시']}
+function getSelectedMapCenter(){const p=province.value,d=district.value,n=neighborhood.value;if(!d)return regionCenters[p]||null;if(!n||n==='전체')return administrativeCenters[`${p}|${d}`]||null;return administrativeCenters[`${p}|${d}|${n}`]||null}
 function distanceKm(a,b){const rad=Math.PI/180,dLat=(b[0]-a[0])*rad,dLng=(b[1]-a[1])*rad;const x=Math.sin(dLat/2)**2+Math.cos(a[0]*rad)*Math.cos(b[0]*rad)*Math.sin(dLng/2)**2;return 6371*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 function buildData(){const center=getSelectedMapCenter();current=chargerStations.map(s=>({...s,distance:distanceKm(center,[s.lat,s.lng])})).sort((a,b)=>a.distance-b.distance)}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -246,7 +251,7 @@ function animateRadiusViewport(km){
   requestAnimationFrame(step);
 }
 function setRadius(km){if(!current.length){notice(locationPrompt);return}activeRadius=km;selected=current.findIndex(s=>s.distance<=activeRadius);updateRadiusCards();render();renderMap(currentMapLabel,true);animateRadiusViewport(km);notice(`반경 ${km}km 안의 충전소만 표시합니다.`)}
-function findChargers(){if(!province.value||!district.value||!neighborhood.value){notice(locationPrompt);return}activeRadius=20;selected=0;buildData();updateRadiusCards();render();updateSummary();const dong=neighborhood.value==='전체'?'':` ${neighborhood.value}`;const label=`${province.value} ${district.value}${dong}`;currentMapLabel=label;document.getElementById('mapRegion').textContent=`${label} 주변`;renderMap(label);notice(`${label} 기준 실제 350kW 충전소 결과입니다.`)}
+function findChargers(){if(!province.value||!district.value||!neighborhood.value){notice(locationPrompt);return}if(!getSelectedMapCenter()){notice('선택 지역의 중심좌표를 확인할 수 없습니다. 결과를 표시하지 않습니다.');return}activeRadius=20;selected=0;buildData();updateRadiusCards();render();updateSummary();const dong=neighborhood.value==='전체'?'':` ${neighborhood.value}`;const label=`${province.value} ${district.value}${dong}`;currentMapLabel=label;document.getElementById('mapRegion').textContent=`${label} 주변`;renderMap(label);notice(`${label} 기준 실제 350kW 충전소 결과입니다.`)}
 function showEmptyState(){
   current=[];selected=-1;currentMapLabel='';
   ensureMap();
@@ -268,6 +273,7 @@ function showEmptyState(){
 let locationPreviewRequest=0;
 function previewLocation(level){
   const center=getSelectedMapCenter();
+  if(!center){notice('선택 지역의 중심좌표를 확인할 수 없습니다.');return}
   const zoom=level==='province'?9:level==='district'?12:14;
   const label=level==='province'?province.value:level==='district'?`${province.value} ${district.value}`:`${province.value} ${district.value} ${neighborhood.value==='전체'?'동 전체':neighborhood.value}`;
   const requestId=++locationPreviewRequest;
