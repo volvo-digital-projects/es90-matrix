@@ -114,7 +114,7 @@ const regionCenters={
 const stationOffsets=[[-.022,-.018],[.016,.027],[-.031,.038],[-.043,-.034],[.048,.046]];
 const province=document.getElementById('province'),district=document.getElementById('district'),neighborhood=document.getElementById('neighborhood');let selected=0,current=[],activeRadius=20,currentMapLabel='';
 let map,mapMarkers=[],homeMarker,radiusCircle,activeStationTooltip,radiusZoomTimer;
-let administrativeCenters={};
+let administrativeCenters={},administrativeCenterLookup={};
 let chargerStations=[];
 const operatorCalls=Object.freeze({
   BE:'1600-8025',
@@ -153,6 +153,8 @@ async function loadAdministrativeAreas(){
   if(!centerResponse.ok)throw new Error('행정구역 중심좌표 데이터를 불러오지 못했습니다.');
   const centerData=await centerResponse.json();
   administrativeCenters=centerData.centers||{};
+  administrativeCenterLookup={};
+  Object.entries(administrativeCenters).forEach(([key,coords])=>{const canonical=key.replace(/\s/g,'');if(administrativeCenterLookup[canonical])throw new Error(`중복된 행정구역 좌표 키: ${key}`);administrativeCenterLookup[canonical]=coords});
   if(!chargerResponse.ok)throw new Error('실제 충전소 데이터를 불러오지 못했습니다.');
   const chargerData=await chargerResponse.json();
   const versionData=versionResponse.ok?await versionResponse.json():{};
@@ -173,8 +175,8 @@ async function loadAdministrativeAreas(){
   if(!Object.keys(nextRegions).length)throw new Error('행정동 데이터가 비어 있습니다.');
   const missingCenters=[];
   Object.entries(data.regions||{}).forEach(([sido,districts])=>Object.entries(districts).forEach(([sigungu,dongs])=>{
-    if(!administrativeCenters[`${sido}|${sigungu}`])missingCenters.push(`${sido}|${sigungu}`);
-    dongs.forEach(dong=>{if(!administrativeCenters[`${sido}|${sigungu}|${dong}`])missingCenters.push(`${sido}|${sigungu}|${dong}`)});
+    if(!administrativeCenterLookup[`${sido}|${sigungu}`.replace(/\s/g,'')])missingCenters.push(`${sido}|${sigungu}`);
+    dongs.forEach(dong=>{if(!administrativeCenterLookup[`${sido}|${sigungu}|${dong}`.replace(/\s/g,'')])missingCenters.push(`${sido}|${sigungu}|${dong}`)});
   }));
   if(missingCenters.length)throw new Error(`행정구역 좌표 검증 실패: ${missingCenters.slice(0,3).join(', ')}${missingCenters.length>3?' 외':''}`);
   regions=nextRegions;
@@ -187,7 +189,7 @@ const koreanSort=(a,b)=>{const left=String(a).normalize('NFC'),right=String(b).n
 function fillProvinces(){province.innerHTML=promptOption()+Object.keys(regions).sort(koreanSort).map(x=>`<option value="${x}">${x}</option>`).join('');district.innerHTML=promptOption();neighborhood.innerHTML=promptOption()}
 function fillDistricts(){const items=[...(regions[province.value]||[])].sort(koreanSort);district.innerHTML=promptOption()+items.map(x=>`<option value="${x}">${x}</option>`).join('');neighborhood.innerHTML=promptOption()}
 function fillNeighborhoods(){const items=neighborhoods[`${province.value}|${district.value}`]||[];const sorted=items.filter(x=>x!=='전체').sort(koreanSort);neighborhood.innerHTML=promptOption()+sorted.map(x=>`<option value="${x}">${x}</option>`).join('')}
-function getSelectedMapCenter(){const p=province.value,d=district.value,n=neighborhood.value;if(!d)return regionCenters[p]||null;if(!n||n==='전체')return administrativeCenters[`${p}|${d}`]||null;return administrativeCenters[`${p}|${d}|${n}`]||null}
+function getSelectedMapCenter(){const p=province.value,d=district.value,n=neighborhood.value;if(!d)return regionCenters[p]||null;const key=!n||n==='전체'?`${p}|${d}`:`${p}|${d}|${n}`;return administrativeCenterLookup[key.replace(/\s/g,'')]||null}
 function distanceKm(a,b){const rad=Math.PI/180,dLat=(b[0]-a[0])*rad,dLng=(b[1]-a[1])*rad;const x=Math.sin(dLat/2)**2+Math.cos(a[0]*rad)*Math.cos(b[0]*rad)*Math.sin(dLng/2)**2;return 6371*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 function buildData(){const center=getSelectedMapCenter();current=chargerStations.map(s=>({...s,distance:distanceKm(center,[s.lat,s.lng])})).sort((a,b)=>a.distance-b.distance)}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
