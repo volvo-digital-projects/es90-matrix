@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parents[1]
 APP_PATH = ROOT / "app.html"
 LOGIN_URL = "https://sales.volvocars.kr/login/login.asp"
-START_DATE = "260811"
+BASELINE_DATE = "2026-09-06"
 TARGET_ROLES = (
     "영업직원",
     "영업팀장",
@@ -42,10 +42,6 @@ def hash_cdsid(value: str) -> str:
     if not normalized:
         raise ValueError("빈 CDSID는 해시할 수 없습니다.")
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
-
-
-def today_yymmdd() -> str:
-    return datetime.now(ZoneInfo("Asia/Seoul")).strftime("%y%m%d")
 
 
 def now_iso() -> str:
@@ -155,29 +151,16 @@ def open_employee_registration(page: Page) -> tuple[Page, Frame]:
     return wait_for_employee_grid(page)
 
 
-def configure_date_range(
-    page: Page,
-    date_label: str,
-    employment_status: str,
-    start_date: str,
-    end_date: str,
-) -> None:
+def configure_current_roster(page: Page) -> None:
     _, frame = wait_for_employee_grid(page)
-    date_type = frame.locator("#date_type")
     status_type = frame.locator("select[name='resign_type']")
     start_input = frame.locator("#s_date")
     end_input = frame.locator("#e_date")
-    if not (
-        date_type.count()
-        and status_type.count()
-        and start_input.count()
-        and end_input.count()
-    ):
-        raise RuntimeError(f"{date_label} 검색 조건을 찾지 못했습니다.")
-    date_type.select_option(label=date_label)
-    status_type.select_option(label=employment_status)
-    start_input.fill(start_date)
-    end_input.fill(end_date)
+    if not (status_type.count() and start_input.count() and end_input.count()):
+        raise RuntimeError("현재 재직자 검색 조건을 찾지 못했습니다.")
+    status_type.select_option(label="재직자")
+    start_input.fill("")
+    end_input.fill("")
 
 
 def set_page_size(page: Page) -> None:
@@ -204,20 +187,10 @@ def click_search(page: Page) -> tuple[Page, Frame]:
     return wait_for_employee_grid(page)
 
 
-def normalize_date_text(value: str) -> str:
-    digits = re.sub(r"\D", "", str(value or ""))
-    if len(digits) == 8 and digits.startswith("20"):
-        return digits[2:]
-    return digits
-
-
 def extract_grid_rows(
     frame: Frame,
     expected_role: str,
-    date_label: str,
-    start_date: str,
-    end_date: str,
-) -> dict[str, str]:
+) -> set[str]:
     rows = frame.locator("tr").evaluate_all(
         """rows => rows.map(row =>
             Array.from(row.querySelectorAll('th,td')).map(cell =>
@@ -229,47 +202,36 @@ def extract_grid_rows(
         (
             index
             for index, row in enumerate(rows)
-            if "직원 CDSID" in row and "직원권한" in row and date_label in row
+            if "직원 CDSID" in row and "직원권한" in row
         ),
         -1,
     )
     if header_index < 0:
         body_text = frame.locator("body").inner_text(timeout=5_000)
         if any(message in body_text for message in ("조회 결과가 없습니다", "검색 결과가 없습니다")):
-            return []
+            return set()
         raise RuntimeError("직원 목록 표의 열 구조가 변경되었습니다.")
 
     header = rows[header_index]
     role_index = header.index("직원권한")
     cdsid_index = header.index("직원 CDSID")
-    date_index = header.index(date_label)
-    max_index = max(role_index, cdsid_index, date_index)
-    results: dict[str, str] = {}
+    max_index = max(role_index, cdsid_index)
+    results: set[str] = set()
     for row in rows[header_index + 1 :]:
         if len(row) <= max_index:
             continue
         role = row[role_index].strip()
         cdsid = normalize_cdsid(row[cdsid_index])
-        employee_date = normalize_date_text(row[date_index])
-        if role == expected_role and cdsid and start_date <= employee_date <= end_date:
-            results[cdsid] = max(results.get(cdsid, ""), employee_date)
+        if role == expected_role and cdsid:
+            results.add(cdsid)
     return results
 
 
-def collect_role_cdsids(
+def collect_current_role_cdsids(
     page: Page,
-    date_label: str,
-    employment_status: str,
-    end_date: str,
-) -> tuple[dict[str, str], dict[str, int]]:
-    configure_date_range(
-        page,
-        date_label,
-        employment_status,
-        START_DATE,
-        end_date,
-    )
-    collected: dict[str, str] = {}
+) -> tuple[set[str], dict[str, int]]:
+    configure_current_roster(page)
+    collected: set[str] = set()
     role_counts: dict[str, int] = {}
     for role in TARGET_ROLES:
         page, frame = wait_for_employee_grid(page)
@@ -281,47 +243,18 @@ def collect_role_cdsids(
         role_rows = extract_grid_rows(
             frame,
             role,
-            date_label,
-            START_DATE,
-            end_date,
         )
         role_counts[role] = len(role_rows)
-        for cdsid, event_date in role_rows.items():
-            collected[cdsid] = max(collected.get(cdsid, ""), event_date)
+        collected.update(role_rows)
     return collected, role_counts
 
 
-def resolve_access_events(
-    hired_dates: dict[str, str],
-    departed_dates: dict[str, str],
-) -> tuple[set[str], set[str]]:
-    """Resolve access from the latest hire/departure event per CDSID.
-
-    A returning employee can have both events inside the search range.  A hire
-    on the same day as, or after, the latest departure restores access; only a
-    strictly later departure revokes it.
-    """
-
-    all_cdsids = set(hired_dates) | set(departed_dates)
-    active_hires: set[str] = set()
-    final_departures: set[str] = set()
-    for cdsid in all_cdsids:
-        hire_date = hired_dates.get(cdsid, "")
-        departure_date = departed_dates.get(cdsid, "")
-        if hire_date and hire_date >= departure_date:
-            active_hires.add(cdsid)
-        elif departure_date:
-            final_departures.add(cdsid)
-    return active_hires, final_departures
-
-
-def collect_access_changes(
+def collect_active_roster(
     user_id: str,
     password: str,
-) -> tuple[dict[str, str], dict[str, str], dict[str, int], dict[str, int]]:
+) -> tuple[set[str], dict[str, int]]:
     from playwright.sync_api import sync_playwright
 
-    end_date = today_yymmdd()
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page()
@@ -330,19 +263,8 @@ def collect_access_changes(
             page, frame = open_employee_registration(page)
             set_page_size(page)
             page, frame = wait_for_employee_grid(page)
-            hired, hire_counts = collect_role_cdsids(
-                page,
-                "입사일자",
-                "재직자",
-                end_date,
-            )
-            departed, departure_counts = collect_role_cdsids(
-                page,
-                "퇴사일자",
-                "퇴사자",
-                end_date,
-            )
-            return hired, departed, hire_counts, departure_counts
+            active, role_counts = collect_current_role_cdsids(page)
+            return active, role_counts
         finally:
             browser.close()
 
@@ -386,6 +308,36 @@ def append_authorized_hashes(app_text: str, new_hashes: set[str]) -> str:
     return update_authorized_hashes(app_text, new_hashes, set())
 
 
+def replace_authorized_hashes(app_text: str, authorized_hashes: set[str]) -> str:
+    if not authorized_hashes:
+        raise RuntimeError("현재 재직자 CDSID 허용 목록이 비어 있습니다.")
+    existing_hashes = read_authorized_hashes(app_text)
+    existing_set = set(existing_hashes)
+    replacement_hashes = [
+        value for value in existing_hashes if value in authorized_hashes
+    ] + sorted(authorized_hashes - existing_set)
+    if replacement_hashes == existing_hashes:
+        return app_text
+    replacement = (
+        "const AUTHORIZED_CDSID_HASHES = new Set([\n"
+        + ",\n".join(f"  '{value}'" for value in replacement_hashes)
+        + "\n]);"
+    )
+    updated, substitutions = AUTH_BLOCK_PATTERN.subn(replacement, app_text, count=1)
+    if substitutions != 1:
+        raise RuntimeError("app.html의 CDSID 허용 해시 목록을 교체하지 못했습니다.")
+    return updated
+
+
+def validate_roster_size(active_count: int, existing_count: int) -> None:
+    minimum_safe_count = max(300, int(existing_count * 0.75))
+    if active_count < minimum_safe_count:
+        raise RuntimeError(
+            "현재 재직자 조회 인원이 비정상적으로 적어 권한 교체를 중단했습니다: "
+            f"조회 {active_count}명, 안전 기준 {minimum_safe_count}명"
+        )
+
+
 def write_github_output(
     changed: bool,
     scanned_count: int,
@@ -410,51 +362,35 @@ def main() -> int:
     try:
         user_id = required_env("VOLVO_SALES_ID")
         password = required_env("VOLVO_SALES_PASSWORD")
-        hired_dates, departed_dates, hire_counts, departure_counts = (
-            collect_access_changes(user_id, password)
-        )
-        hired_cdsids, departed_cdsids = resolve_access_events(
-            hired_dates,
-            departed_dates,
-        )
+        active_cdsids, role_counts = collect_active_roster(user_id, password)
         app_text = APP_PATH.read_text(encoding="utf-8")
         existing_hashes = set(read_authorized_hashes(app_text))
-        hired_hashes = {hash_cdsid(cdsid) for cdsid in hired_cdsids}
-        departed_hashes = {hash_cdsid(cdsid) for cdsid in departed_cdsids}
-        new_hashes = hired_hashes - existing_hashes - departed_hashes
-        revoked_hashes = departed_hashes & existing_hashes
-        updated_app = update_authorized_hashes(
-            app_text,
-            new_hashes,
-            departed_hashes,
-        )
+        active_hashes = {hash_cdsid(cdsid) for cdsid in active_cdsids}
+        validate_roster_size(len(active_hashes), len(existing_hashes))
+        new_hashes = active_hashes - existing_hashes
+        revoked_hashes = existing_hashes - active_hashes
+        updated_app = replace_authorized_hashes(app_text, active_hashes)
         changed = updated_app != app_text
         if changed:
             APP_PATH.write_text(updated_app, encoding="utf-8")
         write_github_output(
             changed,
-            len(hired_dates),
+            len(active_cdsids),
             len(new_hashes),
-            len(departed_dates),
+            len(revoked_hashes),
             len(revoked_hashes),
             now_iso(),
         )
-        hire_summary = ", ".join(
-            f"{role} {hire_counts.get(role, 0)}명" for role in TARGET_ROLES
-        )
-        departure_summary = ", ".join(
-            f"{role} {departure_counts.get(role, 0)}명" for role in TARGET_ROLES
+        roster_summary = ", ".join(
+            f"{role} {role_counts.get(role, 0)}명" for role in TARGET_ROLES
         )
         print(
-            f"Sales-DMS 신규 입사자 확인 완료: {hire_summary}, "
-            f"신규 권한 {len(new_hashes)}명"
+            f"Sales-DMS 현재 재직자 전체 확인 완료: {roster_summary}"
         )
         print(
-            f"Sales-DMS 퇴사자 확인 완료: {departure_summary}, "
-            f"로그인 차단 {len(revoked_hashes)}명"
+            f"CDSID 권한 동기화 완료: 전체 {len(active_cdsids)}명, "
+            f"신규 허용 {len(new_hashes)}명, 로그인 차단 {len(revoked_hashes)}명"
         )
-        returning_count = len(set(hired_dates) & set(departed_dates) & hired_cdsids)
-        print(f"재입사 우선 처리 완료: 로그인 유지 또는 복원 {returning_count}명")
         return 0
     except Exception as error:
         print(f"CDSID 자동 갱신 실패: {error}", file=sys.stderr)

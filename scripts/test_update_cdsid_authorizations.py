@@ -43,24 +43,34 @@ class CdsidAuthorizationTests(unittest.TestCase):
         )
         self.assertEqual(updater.read_authorized_hashes(updated), [active])
 
-    def test_rehire_on_or_after_departure_restores_access(self) -> None:
-        hired, departed = updater.resolve_access_events(
-            {
-                "RETURNED-LATER": "260815",
-                "RETURNED-SAME-DAY": "260814",
-                "LEFT-LATER": "260812",
-            },
-            {
-                "RETURNED-LATER": "260812",
-                "RETURNED-SAME-DAY": "260814",
-                "LEFT-LATER": "260817",
-            },
+    def test_replace_authorized_hashes_matches_current_roster(self) -> None:
+        old = updater.hash_cdsid("OLD-ONE")
+        active = updater.hash_cdsid("ACTIVE-TWO")
+        source = (
+            "before\nconst AUTHORIZED_CDSID_HASHES = new Set([\n"
+            f"  '{old}'\n"
+            "]);\nafter\n"
         )
-        self.assertEqual(hired, {"RETURNED-LATER", "RETURNED-SAME-DAY"})
-        self.assertEqual(departed, {"LEFT-LATER"})
+        updated = updater.replace_authorized_hashes(source, {active})
+        self.assertEqual(updater.read_authorized_hashes(updated), [active])
+
+    def test_replace_rejects_empty_roster(self) -> None:
+        existing = updater.hash_cdsid("ACTIVE-ONE")
+        source = (
+            "before\nconst AUTHORIZED_CDSID_HASHES = new Set([\n"
+            f"  '{existing}'\n"
+            "]);\nafter\n"
+        )
+        with self.assertRaisesRegex(RuntimeError, "비어 있습니다"):
+            updater.replace_authorized_hashes(source, set())
+
+    def test_roster_size_guard_blocks_suspicious_mass_revocation(self) -> None:
+        updater.validate_roster_size(354, 473)
+        with self.assertRaisesRegex(RuntimeError, "권한 교체를 중단"):
+            updater.validate_roster_size(353, 473)
 
     def test_target_roles_and_baseline_date(self) -> None:
-        self.assertEqual(updater.START_DATE, "260811")
+        self.assertEqual(updater.BASELINE_DATE, "2026-09-06")
         self.assertEqual(
             updater.TARGET_ROLES,
             (
@@ -71,10 +81,6 @@ class CdsidAuthorizationTests(unittest.TestCase):
                 "세일즈 지점장",
             ),
         )
-
-    def test_normalize_date_text(self) -> None:
-        self.assertEqual(updater.normalize_date_text("2026-08-10"), "260810")
-        self.assertEqual(updater.normalize_date_text("26.08.10"), "260810")
 
     def test_github_output_contains_no_identifier(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

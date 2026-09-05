@@ -74,7 +74,7 @@ jobs:
           python -m pip install --disable-pip-version-check playwright==1.54.0
           python -m playwright install --with-deps chromium
 
-      - name: Check Sales-DMS access changes
+      - name: Reconcile the full Sales-DMS active roster
         if: steps.slot.outputs.should_run == 'true'
         id: cdsid
         env:
