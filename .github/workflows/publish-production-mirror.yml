@@ -1,0 +1,46 @@
+name: Publish production mirror
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-mirror
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'volvo-digital-projects/es90-matrix'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out canonical repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Configure production deploy key
+        env:
+          PRODUCTION_DEPLOY_KEY: ${{ secrets.PRODUCTION_DEPLOY_KEY }}
+        run: |
+          test -n "$PRODUCTION_DEPLOY_KEY"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$PRODUCTION_DEPLOY_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Publish canonical commit to existing Pages repository
+        run: |
+          git remote add production git@github.com:volvo-es90-matrix/es90-matrix.git
+          git fetch production main
+          if ! git merge-base --is-ancestor production/main HEAD; then
+            echo "Production contains commits missing from canonical main; stopping to prevent data loss." >&2
+            exit 1
+          fi
+          git push production HEAD:main
