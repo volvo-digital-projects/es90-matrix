@@ -4,6 +4,15 @@ on:
   push:
     branches:
       - main
+  workflow_run:
+    workflows:
+      - Update CDSID authorizations
+      - Update 350kW charger data
+      - Update ES90 reservations
+      - Update Getcha competitor prices
+      - Update nationwide EV subsidy data
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -15,7 +24,9 @@ concurrency:
 
 jobs:
   publish:
-    if: github.repository == 'volvo-digital-projects/es90-matrix'
+    if: >-
+      github.repository == 'volvo-digital-projects/es90-matrix' &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -23,6 +34,7 @@ jobs:
       - name: Check out canonical repository
         uses: actions/checkout@v5
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Configure production deploy key
