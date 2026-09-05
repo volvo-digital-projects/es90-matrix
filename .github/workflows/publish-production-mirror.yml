@@ -6,6 +6,12 @@ on:
       - main
   workflow_run:
     workflows:
+      - ES90 reservations 09:00 slot
+      - ES90 reservations 12:00 slot
+      - ES90 reservations 15:00 slot
+      - ES90 reservations 18:00 slot
+      - ES90 reservation watchdog
+      - Nationwide EV subsidy watchdog
       - Update CDSID authorizations
       - Update 350kW charger data
       - Update ES90 reservations
