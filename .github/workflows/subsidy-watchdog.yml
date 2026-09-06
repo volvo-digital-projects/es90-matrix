@@ -2,10 +2,9 @@ name: Nationwide EV subsidy watchdog
 
 on:
   schedule:
-    # Check early in each hour after the primary :07 attempt. If GitHub's
-    # scheduler missed it, recover the same hourly slot at :12, then retry
-    # at :32 and :52 only while subsidyCheckedAt is still behind.
-    - cron: "12,32,52 * * * *"
+    # Check after each required 08:00/11:00/14:00/17:00 Asia/Seoul slot.
+    # If the primary attempt was missed, retry at :12/:32/:52 while stale.
+    - cron: "12,32,52 23,2,5,8 * * *"
   workflow_dispatch:
 
 permissions:
