@@ -1658,7 +1658,8 @@ body.cover-open{overflow:hidden;background:#05070a;}
   .login-cover-subtitle{font-size:22px;}
   .login-cover-accent{width:280px!important;max-width:100%;}
   .login-cover-desc{font-size:12px;}
-  .login-cover-panel{top:auto;left:24px;right:24px;bottom:62px;width:auto;}
+  .login-cover-panel{top:auto;left:24px;right:24px;bottom:62px;width:auto;transform:translate3d(0,var(--login-keyboard-lift,0px),0);transition:transform .22s ease-out;will-change:transform;}
+  .login-cover.keyboard-open .login-cover-panel{z-index:5;}
   .login-card{width:100%;padding:0;}
   .login-input-wrap,.login-submit{height:46px;}
   .login-id-input{font-size:14px;}
@@ -20620,6 +20621,51 @@ function initLoginCover(){
   let lockTimer = null;
   let loginTransitioning = false;
   let lastActivityWrite = 0;
+  let loginKeyboardFrame = 0;
+  let loginViewportBaseline = Math.max(
+    document.documentElement.clientHeight,
+    window.innerHeight,
+    window.visualViewport?.height || 0
+  );
+  const syncLoginKeyboardPosition = ()=>{
+    window.cancelAnimationFrame(loginKeyboardFrame);
+    loginKeyboardFrame = window.requestAnimationFrame(()=>{
+      if(!cover || cover.hidden) return;
+      const isMobile = window.matchMedia('(max-width:820px)').matches;
+      const inputFocused = document.activeElement === input;
+      const viewport = window.visualViewport;
+      if(!isMobile || !inputFocused || !viewport){
+        cover.classList.remove('keyboard-open');
+        cover.style.removeProperty('--login-keyboard-lift');
+        if(!inputFocused){
+          loginViewportBaseline = Math.max(
+            document.documentElement.clientHeight,
+            window.innerHeight,
+            viewport?.height || 0
+          );
+        }
+        return;
+      }
+      const visibleBottom = viewport.offsetTop + viewport.height;
+      const hiddenBottom = Math.max(0,loginViewportBaseline - visibleBottom);
+      const keyboardOpen = hiddenBottom > 80;
+      cover.classList.toggle('keyboard-open',keyboardOpen);
+      if(keyboardOpen){
+        cover.style.setProperty('--login-keyboard-lift',`${-Math.max(0,Math.round(hiddenBottom - 50))}px`);
+      }else{
+        cover.style.removeProperty('--login-keyboard-lift');
+      }
+    });
+  };
+  input?.addEventListener('focus',()=>{
+    syncLoginKeyboardPosition();
+    window.setTimeout(syncLoginKeyboardPosition,120);
+    window.setTimeout(syncLoginKeyboardPosition,300);
+  });
+  input?.addEventListener('blur',()=>window.setTimeout(syncLoginKeyboardPosition,120));
+  window.visualViewport?.addEventListener('resize',syncLoginKeyboardPosition);
+  window.visualViewport?.addEventListener('scroll',syncLoginKeyboardPosition);
+  window.addEventListener('resize',syncLoginKeyboardPosition);
   // 로그인/접속 현황 같은 핵심 초기화가 부가 배지 오류로 중단되지 않게 격리한다.
   try{ syncLoginUpdateStamp(); }catch(_){ }
   const refreshLoginVisitStats = ()=>{
