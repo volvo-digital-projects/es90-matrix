@@ -1,9 +1,11 @@
 {
-  "checkedAt": "2026-09-07T00:09:50+09:00",
+  "checkedAt": "2026-09-08T04:00:14+09:00",
   "expectedTrimCount": 21,
   "matchedTrimCount": 21,
   "unmatchedTrimCount": 0,
   "unmatchedTrims": [],
-  "priceChangedTrimCount": 0,
-  "priceChangedTrims": []
+  "priceChangedTrimCount": 1,
+  "priceChangedTrims": [
+    "Audi / Performance S-line+"
+  ]
 }
