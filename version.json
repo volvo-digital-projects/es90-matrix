@@ -1,12 +1,12 @@
 {
-  "version": "2026.08.10.1818",
-  "updatedAt": "2026-09-11T12:22:26+09:00",
+  "version": "2026.08.10.1819",
+  "updatedAt": "2026-09-11T12:22:57+09:00",
   "matrixUpdatedAt": "2026-09-06T22:50:21+09:00",
   "reservationUpdatedAt": "2026-09-11T12:21:48+09:00",
   "chargerCheckedAt": "2026-09-11T00:15:37+09:00",
   "chargerUpdatedAt": "2026-09-10T00:18:51+09:00",
   "competitorPriceCheckedAt": "2026-09-11T00:02:23+09:00",
-  "subsidyCheckedAt": "2026-09-11T10:01:36+09:00",
+  "subsidyCheckedAt": "2026-09-11T12:22:57+09:00",
   "tmapCheckedAt": "2026-09-11T00:15:37+09:00",
   "cdsidCheckedAt": "2026-09-11T12:22:26+09:00"
 }
