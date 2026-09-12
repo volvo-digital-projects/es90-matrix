@@ -1,19 +1,19 @@
 {
   "observationDate": "2026-09-12",
-  "observedAt": "2026-09-12T14:01:24+09:00",
-  "total": 2681,
+  "observedAt": "2026-09-12T18:34:42+09:00",
+  "total": 2691,
   "previousDayTotal": 2673,
   "finalUpdateDate": "2026-09-12",
-  "finalUpdateTotal": 2681,
+  "finalUpdateTotal": 2691,
   "byTrim": [
     {
       "trim": "Single Motor Ultra",
-      "count": 1450,
+      "count": 1452,
       "airSuspension": true
     },
     {
       "trim": "Twin Motor Ultra",
-      "count": 871,
+      "count": 877,
       "airSuspension": true
     },
     {
@@ -22,7 +22,7 @@
     },
     {
       "trim": "Single Motor Ultra",
-      "count": 105,
+      "count": 107,
       "airSuspension": false,
       "variant": "No Air Sus"
     },
