@@ -1014,11 +1014,9 @@ body.ipad-step3-scroll-limit #panel4.panel.show{
 #panel1 .es90-drive-preview{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
 #panel1 .es90-drive-media-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,17,28,.08) 32%,rgba(4,17,28,.74) 100%);pointer-events:none;}
 #panel1 .es90-drive-media-badge{position:absolute;left:14px;top:13px;padding:4px 9px;border:1px solid rgba(255,255,255,.42);border-radius:999px;background:rgba(7,27,44,.54);font-size:8px;font-weight:750;letter-spacing:.9px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none;}
-#panel1 .es90-drive-media-copy{position:absolute;left:15px;right:58px;bottom:13px;display:flex;flex-direction:column;gap:2px;pointer-events:none;}
+#panel1 .es90-drive-media-copy{position:absolute;left:15px;right:15px;bottom:13px;display:flex;flex-direction:column;gap:2px;pointer-events:none;}
 #panel1 .es90-drive-media-copy strong{font-size:13px;font-weight:700;letter-spacing:-.1px;}
 #panel1 .es90-drive-media-copy span{color:rgba(255,255,255,.76);font-size:9px;font-weight:500;}
-#panel1 .es90-drive-media-play{position:absolute;right:15px;bottom:13px;display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(255,255,255,.56);border-radius:50%;background:rgba(7,27,44,.58);box-shadow:0 4px 14px rgba(0,0,0,.18);pointer-events:none;}
-#panel1 .es90-drive-media-play svg{width:14px;height:14px;margin-left:2px;fill:#fff;}
 .es90-video-modal{position:fixed;z-index:5000;inset:0;display:flex;align-items:center;justify-content:center;padding:max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));background:rgba(1,8,14,.92);opacity:0;transition:opacity .18s ease;}
 .es90-video-modal[hidden]{display:none!important;}
 .es90-video-modal.is-open{opacity:1;}
@@ -18276,7 +18274,6 @@ function es90DriveMediaMarkup(){
         <span class="es90-drive-media-shade" aria-hidden="true"></span>
         <span class="es90-drive-media-badge">ES90 DRIVE FILM</span>
         <span class="es90-drive-media-copy"><strong>Volvo ES90 도로주행 영상</strong><span>화면을 누르면 전체 영상이 재생됩니다</span></span>
-        <span class="es90-drive-media-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.6v12.8L18 12 8 5.6Z"/></svg></span>
       </button>
     </div>`;
 }
