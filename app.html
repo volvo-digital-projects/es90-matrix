@@ -17727,7 +17727,7 @@ function renderCatOptionCards(items, tone){
   const escapeAttr = value=>String(value||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
   return `<div class="cat-card-grid ${tone}">
     ${groups.map(g=>`
-      <div class="cat-card" data-catkey="${g.key}" style="cursor:pointer;" onclick="highlightCatCard('${g.key.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+      <div class="cat-card" data-catkey="${g.key}" style="cursor:pointer;" onclick="highlightCatCard(event,'${g.key.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
         <div class="cat-card-head">${g.category}</div>
         ${g.entries.length ? `<ul class="cat-card-list">${g.entries.map(e=>`<li class="${e.badges?.length?'has-upgrade-badges':''}" data-analysis-item="${escapeAttr(e.name)}"><span class="cat-item-name">${e.name}</span>${e.badges?.length?`<span class="ug-badge-stack">${e.badges.map(badge=>`<span class="ug-badge">${badge}</span>`).join('')}</span>`:e.badge?` <span class="ug-badge">${e.badge}</span>`:''}</li>`).join('')}</ul>` : `<div class="cat-card-empty">해당 없음</div>`}
       </div>
@@ -19789,14 +19789,36 @@ function pinOptionAnalysisFromDetail(event,categoryKey,itemName){
 
 // item: clicking a category bar in "카테고리별 옵션비교" jumps to the matching tab in "카테고리별 상세옵션"
 // item: clicking a category card in "옵션구성 분석결과" keeps its color and tones down the other 7, then jumps to the matching tab
-function highlightCatCard(key){
+function preserveOptionAnalysisViewportPosition(action){
   const analysisCard = document.getElementById('optionAnalysisCard');
-  const previousTop = analysisCard?.getBoundingClientRect().top;
-  selectOptionCategory(key);
-  if(analysisCard && Number.isFinite(previousTop)){
-    const layoutShift = analysisCard.getBoundingClientRect().top - previousTop;
-    if(Math.abs(layoutShift) > 0.5) window.scrollBy(0,layoutShift);
+  if(!analysisCard){
+    action();
+    return;
   }
+  const scrollRoot = document.scrollingElement || document.documentElement;
+  const previousTop = analysisCard.getBoundingClientRect().top;
+  const htmlAnchor = document.documentElement.style.overflowAnchor;
+  const bodyAnchor = document.body.style.overflowAnchor;
+  document.documentElement.style.overflowAnchor = 'none';
+  document.body.style.overflowAnchor = 'none';
+  const restorePosition = ()=>{
+    const layoutShift = analysisCard.getBoundingClientRect().top - previousTop;
+    if(Math.abs(layoutShift) > 0.5) scrollRoot.scrollTop += layoutShift;
+  };
+  action();
+  restorePosition();
+  requestAnimationFrame(()=>{
+    restorePosition();
+    requestAnimationFrame(()=>{
+      restorePosition();
+      document.documentElement.style.overflowAnchor = htmlAnchor;
+      document.body.style.overflowAnchor = bodyAnchor;
+    });
+  });
+}
+function highlightCatCard(event,key){
+  event?.preventDefault();
+  preserveOptionAnalysisViewportPosition(()=>selectOptionCategory(key));
 }
 function jumpToCategory(category){
   const tabs = document.getElementById('catTabs');
