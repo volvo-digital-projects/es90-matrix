@@ -18349,6 +18349,91 @@ function setEs90VideoSafeArea(open){
 }
 window.addEventListener('pagehide',()=>setEs90VideoSafeArea(false));
 
+const ES90_INLINE_VIDEO_SELECTOR = '.es90-drive-preview,.es90-charging-preview,.es90-trunk-preview,.es90-digital-key-preview';
+const ES90_VIDEO_MODAL_FADE_MS = 200;
+let ES90_INLINE_VIDEO_OBSERVER = null;
+function initEs90InlineVideoPreviews(root=document){
+  const videos = [...root.querySelectorAll(ES90_INLINE_VIDEO_SELECTOR)];
+  if(!videos.length) return;
+  if('IntersectionObserver' in window && !ES90_INLINE_VIDEO_OBSERVER){
+    ES90_INLINE_VIDEO_OBSERVER = new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        const video = entry.target;
+        video.dataset.es90Visible = entry.isIntersecting ? 'true' : 'false';
+        if(entry.isIntersecting && !document.querySelector('.es90-video-modal.is-open,.es90-charging-video-modal.is-open,.es90-trunk-video-modal.is-open,.es90-digital-key-video-modal.is-open')){
+          video.play().catch(()=>{});
+        }else{
+          video.pause();
+        }
+      });
+    },{rootMargin:'80px 0px',threshold:.01});
+  }
+  videos.forEach(video=>{
+    if(video.dataset.es90Observed==='true') return;
+    video.dataset.es90Observed = 'true';
+    if(ES90_INLINE_VIDEO_OBSERVER) ES90_INLINE_VIDEO_OBSERVER.observe(video);
+    else video.play().catch(()=>{});
+  });
+}
+function pauseEs90InlineVideoPreviews(){
+  document.querySelectorAll(ES90_INLINE_VIDEO_SELECTOR).forEach(video=>video.pause());
+}
+function resumeEs90InlineVideoPreviews(){
+  document.querySelectorAll(ES90_INLINE_VIDEO_SELECTOR).forEach(video=>{
+    if(video.dataset.es90Visible==='true' || !ES90_INLINE_VIDEO_OBSERVER) video.play().catch(()=>{});
+  });
+}
+function configureEs90VideoModal(modal,{videoSelector,closeSelector,bodyClass}){
+  const video = modal.querySelector(videoSelector);
+  video.controls = false;
+  video.removeAttribute('controls');
+  video.addEventListener('playing',()=>{
+    const reveal = ()=>{
+      if(!modal.hidden && modal.classList.contains('is-open')) modal.classList.add('is-playing');
+    };
+    if(typeof video.requestVideoFrameCallback==='function') video.requestVideoFrameCallback(reveal);
+    else requestAnimationFrame(reveal);
+  });
+  const finishClose = ()=>{
+    if(modal.classList.contains('is-open')) return;
+    modal.hidden = true;
+    document.body.classList.remove(bodyClass);
+    setEs90VideoSafeArea(false);
+    try{ video.currentTime = 0; }catch(_){ }
+    requestAnimationFrame(resumeEs90InlineVideoPreviews);
+  };
+  const closeModal = ()=>{
+    if(modal.hidden) return;
+    clearTimeout(modal._es90CloseTimer);
+    video.pause();
+    modal.classList.remove('is-open','is-playing');
+    modal._es90CloseTimer = setTimeout(finishClose,ES90_VIDEO_MODAL_FADE_MS);
+  };
+  modal._es90Close = closeModal;
+  modal.querySelector(closeSelector).addEventListener('click',closeModal);
+  modal.addEventListener('click',event=>{ if(event.target===modal) closeModal(); });
+  video.addEventListener('webkitendfullscreen',closeModal);
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape' && !modal.hidden) closeModal();
+  });
+  return video;
+}
+function openConfiguredEs90VideoModal(modal,{videoSelector,bodyClass}){
+  const video = modal.querySelector(videoSelector);
+  clearTimeout(modal._es90CloseTimer);
+  pauseEs90InlineVideoPreviews();
+  video.pause();
+  try{ video.currentTime = 0; }catch(_){ }
+  modal.classList.remove('is-playing');
+  modal.hidden = false;
+  document.body.classList.add(bodyClass);
+  setEs90VideoSafeArea(true);
+  requestAnimationFrame(()=>{
+    modal.classList.add('is-open');
+    video.play().catch(()=>{});
+  });
+}
+
 function ensureEs90DriveVideoModal(){
   let modal = document.getElementById('es90DriveVideoModal');
   if(modal) return modal;
@@ -18362,63 +18447,19 @@ function ensureEs90DriveVideoModal(){
   modal.innerHTML = `
     <div class="es90-video-dialog">
       <button class="es90-video-close" type="button" aria-label="영상 닫기">&times;</button>
-      <video class="es90-video-preview-full" muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-driving-poster.jpg" aria-hidden="true" tabindex="-1">
-        <source src="./assets/media/es90-driving-preview.mp4" type="video/mp4">
-      </video>
-      <video class="es90-video-full" loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-driving-poster.jpg" disablepictureinpicture controlslist="nodownload">
+      <img class="es90-video-preview-full" src="./assets/media/es90-driving-poster.jpg" alt="" draggable="false" aria-hidden="true">
+      <video class="es90-video-full" loop playsinline webkit-playsinline preload="none" poster="./assets/media/es90-driving-poster.jpg" disablepictureinpicture controlslist="nodownload">
         <source src="./assets/media/es90-driving-full.mp4" type="video/mp4">
       </video>
     </div>`;
   document.body.appendChild(modal);
-  const video = modal.querySelector('.es90-video-full');
-  const preview = modal.querySelector('.es90-video-preview-full');
-  video.controls = false;
-  video.removeAttribute('controls');
-  const showFullVideo = ()=>{
-    modal.classList.add('is-playing');
-    preview.pause();
-  };
-  video.addEventListener('playing',showFullVideo);
-  const closeModal = ()=>{
-    video.pause();
-    preview.pause();
-    video.currentTime = 0;
-    preview.currentTime = 0;
-    modal.classList.remove('is-open','is-playing');
-    modal.hidden = true;
-    document.body.classList.remove('es90-video-modal-open');
-    setEs90VideoSafeArea(false);
-    document.querySelector('.es90-drive-preview')?.play().catch(()=>{});
-  };
-  modal.querySelector('.es90-video-close').addEventListener('click',closeModal);
-  modal.addEventListener('click',event=>{ if(event.target===modal) closeModal(); });
-  video.addEventListener('webkitendfullscreen',closeModal);
-  document.addEventListener('keydown',event=>{
-    if(event.key==='Escape' && !modal.hidden) closeModal();
-  });
+  configureEs90VideoModal(modal,{videoSelector:'.es90-video-full',closeSelector:'.es90-video-close',bodyClass:'es90-video-modal-open'});
   return modal;
 }
 
 function openEs90DriveVideo(){
   const modal = ensureEs90DriveVideoModal();
-  const video = modal.querySelector('.es90-video-full');
-  const modalPreview = modal.querySelector('.es90-video-preview-full');
-  const inlinePreview = document.querySelector('.es90-drive-preview');
-  const previewTime = inlinePreview?.currentTime || 0;
-  inlinePreview?.pause();
-  modal.classList.remove('is-playing');
-  modal.hidden = false;
-  document.body.classList.add('es90-video-modal-open');
-  setEs90VideoSafeArea(true);
-  requestAnimationFrame(()=>modal.classList.add('is-open'));
-  if(modalPreview.readyState>=1) modalPreview.currentTime = Math.min(previewTime,Math.max(0,(modalPreview.duration||previewTime)-.05));
-  modalPreview.play().catch(()=>{});
-  const syncFullVideoTime = ()=>{
-    video.currentTime = Math.min(previewTime,Math.max(0,(video.duration||previewTime)-.05));
-  };
-  if(video.readyState>=1) syncFullVideoTime();
-  else video.addEventListener('loadedmetadata',syncFullVideoTime,{once:true});
-  video.play().catch(()=>{});
+  openConfiguredEs90VideoModal(modal,{videoSelector:'.es90-video-full',bodyClass:'es90-video-modal-open'});
 }
 
 function ensureEs90ChargingVideoModal(){
@@ -18434,10 +18475,8 @@ function ensureEs90ChargingVideoModal(){
   modal.innerHTML = `
     <div class="es90-charging-video-dialog">
       <button class="es90-charging-video-close" type="button" aria-label="영상 닫기">&times;</button>
-      <video class="es90-charging-video-preview-full" muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-charging-poster.jpg" aria-hidden="true" tabindex="-1">
-        <source src="./assets/media/es90-charging-preview.mp4" type="video/mp4">
-      </video>
-      <video class="es90-charging-video-full" loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-charging-poster.jpg" disablepictureinpicture controlslist="nodownload">
+      <img class="es90-charging-video-preview-full" src="./assets/media/es90-charging-poster.jpg" alt="" draggable="false" aria-hidden="true">
+      <video class="es90-charging-video-full" loop playsinline webkit-playsinline preload="none" poster="./assets/media/es90-charging-poster.jpg" disablepictureinpicture controlslist="nodownload">
         <source src="./assets/media/es90-charging-full.mp4" type="video/mp4">
       </video>
       <span class="es90-charging-video-shade" aria-hidden="true"></span>
@@ -18445,57 +18484,18 @@ function ensureEs90ChargingVideoModal(){
       <span class="es90-charging-video-copy"><strong>Volvo ES90 350kW 초고속충전 영상</strong><span>SOC 10% → 80%까지 충전 시 소요시간</span></span>
     </div>`;
   document.body.appendChild(modal);
-  const video = modal.querySelector('.es90-charging-video-full');
-  const preview = modal.querySelector('.es90-charging-video-preview-full');
-  video.controls = false;
-  video.removeAttribute('controls');
-  const showFullVideo = ()=>{
-    modal.classList.add('is-playing');
-    preview.pause();
-  };
-  video.addEventListener('playing',showFullVideo);
-  const closeModal = ()=>{
-    video.pause();
-    preview.pause();
-    video.currentTime = 0;
-    preview.currentTime = 0;
-    modal.classList.remove('is-open','is-playing');
-    modal.hidden = true;
-    document.body.classList.remove('es90-charging-video-modal-open');
-    setEs90VideoSafeArea(false);
-    document.querySelectorAll('.es90-charging-preview').forEach(preview=>preview.play().catch(()=>{}));
-  };
-  modal.querySelector('.es90-charging-video-close').addEventListener('click',closeModal);
-  modal.addEventListener('click',event=>{ if(event.target===modal) closeModal(); });
-  document.addEventListener('keydown',event=>{ if(event.key==='Escape' && !modal.hidden) closeModal(); });
+  configureEs90VideoModal(modal,{videoSelector:'.es90-charging-video-full',closeSelector:'.es90-charging-video-close',bodyClass:'es90-charging-video-modal-open'});
   return modal;
 }
 
 function openEs90ChargingVideo(trigger){
   const modal = ensureEs90ChargingVideoModal();
-  const video = modal.querySelector('.es90-charging-video-full');
-  const modalPreview = modal.querySelector('.es90-charging-video-preview-full');
-  const inlinePreview = trigger?.querySelector('.es90-charging-preview') || document.querySelector('.es90-charging-preview');
-  const previewTime = inlinePreview?.currentTime || 0;
-  document.querySelectorAll('.es90-charging-preview').forEach(preview=>preview.pause());
-  modal.classList.remove('is-playing');
-  modal.hidden = false;
-  document.body.classList.add('es90-charging-video-modal-open');
-  setEs90VideoSafeArea(true);
-  requestAnimationFrame(()=>modal.classList.add('is-open'));
-  if(modalPreview.readyState>=1) modalPreview.currentTime = Math.min(previewTime,Math.max(0,(modalPreview.duration||previewTime)-.05));
-  modalPreview.play().catch(()=>{});
-  const syncFullVideoTime = ()=>{
-    video.currentTime = Math.min(previewTime,Math.max(0,(video.duration||previewTime)-.05));
-  };
-  if(video.readyState>=1) syncFullVideoTime();
-  else video.addEventListener('loadedmetadata',syncFullVideoTime,{once:true});
-  video.play().catch(()=>{});
+  openConfiguredEs90VideoModal(modal,{videoSelector:'.es90-charging-video-full',bodyClass:'es90-charging-video-modal-open'});
 }
 
 function es90ChargingInlineMarkup(){
   return `<button class="es90-charging-inline" type="button" aria-label="Volvo ES90 350kW 초고속충전 영상 크게 보기" onclick="event.stopPropagation();openEs90ChargingVideo(this)">
-    <video class="es90-charging-preview" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-charging-poster.jpg" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-charging-preview.mp4" type="video/mp4"></video>
+    <video class="es90-charging-preview" muted loop playsinline webkit-playsinline preload="none" poster="./assets/media/es90-charging-poster.jpg" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-charging-preview.mp4" type="video/mp4"></video>
     <span class="es90-charging-inline-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.6v12.8L18 12 8 5.6Z"/></svg></span>
   </button>`;
 }
@@ -18513,10 +18513,8 @@ function ensureEs90TrunkVideoModal(){
   modal.innerHTML = `
     <div class="es90-trunk-video-dialog">
       <button class="es90-trunk-video-close" type="button" aria-label="영상 닫기">&times;</button>
-      <video class="es90-trunk-video-preview-full" muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-trunk-poster.jpg" aria-hidden="true" tabindex="-1">
-        <source src="./assets/media/es90-trunk-preview.mp4" type="video/mp4">
-      </video>
-      <video class="es90-trunk-video-full" loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-trunk-poster.jpg" disablepictureinpicture controlslist="nodownload">
+      <img class="es90-trunk-video-preview-full" src="./assets/media/es90-trunk-poster.jpg" alt="" draggable="false" aria-hidden="true">
+      <video class="es90-trunk-video-full" loop playsinline webkit-playsinline preload="none" poster="./assets/media/es90-trunk-poster.jpg" disablepictureinpicture controlslist="nodownload">
         <source src="./assets/media/es90-trunk-full.mp4" type="video/mp4">
       </video>
       <span class="es90-trunk-video-shade" aria-hidden="true"></span>
@@ -18534,57 +18532,18 @@ function ensureEs90TrunkVideoModal(){
       </div>
     </div>`;
   document.body.appendChild(modal);
-  const video = modal.querySelector('.es90-trunk-video-full');
-  const preview = modal.querySelector('.es90-trunk-video-preview-full');
-  video.controls = false;
-  video.removeAttribute('controls');
-  const showFullVideo = ()=>{
-    modal.classList.add('is-playing');
-    preview.pause();
-  };
-  video.addEventListener('playing',showFullVideo);
-  const closeModal = ()=>{
-    video.pause();
-    preview.pause();
-    video.currentTime = 0;
-    preview.currentTime = 0;
-    modal.classList.remove('is-open','is-playing');
-    modal.hidden = true;
-    document.body.classList.remove('es90-trunk-video-modal-open');
-    setEs90VideoSafeArea(false);
-    document.querySelectorAll('.es90-trunk-preview').forEach(preview=>preview.play().catch(()=>{}));
-  };
-  modal.querySelector('.es90-trunk-video-close').addEventListener('click',closeModal);
-  modal.addEventListener('click',event=>{ if(event.target===modal) closeModal(); });
-  document.addEventListener('keydown',event=>{ if(event.key==='Escape' && !modal.hidden) closeModal(); });
+  configureEs90VideoModal(modal,{videoSelector:'.es90-trunk-video-full',closeSelector:'.es90-trunk-video-close',bodyClass:'es90-trunk-video-modal-open'});
   return modal;
 }
 
 function openEs90TrunkVideo(trigger){
   const modal = ensureEs90TrunkVideoModal();
-  const video = modal.querySelector('.es90-trunk-video-full');
-  const modalPreview = modal.querySelector('.es90-trunk-video-preview-full');
-  const inlinePreview = trigger?.querySelector('.es90-trunk-preview') || document.querySelector('.es90-trunk-preview');
-  const previewTime = inlinePreview?.currentTime || 0;
-  document.querySelectorAll('.es90-trunk-preview').forEach(preview=>preview.pause());
-  modal.classList.remove('is-playing');
-  modal.hidden = false;
-  document.body.classList.add('es90-trunk-video-modal-open');
-  setEs90VideoSafeArea(true);
-  requestAnimationFrame(()=>modal.classList.add('is-open'));
-  if(modalPreview.readyState>=1) modalPreview.currentTime = Math.min(previewTime,Math.max(0,(modalPreview.duration||previewTime)-.05));
-  modalPreview.play().catch(()=>{});
-  const syncFullVideoTime = ()=>{
-    video.currentTime = Math.min(previewTime,Math.max(0,(video.duration||previewTime)-.05));
-  };
-  if(video.readyState>=1) syncFullVideoTime();
-  else video.addEventListener('loadedmetadata',syncFullVideoTime,{once:true});
-  video.play().catch(()=>{});
+  openConfiguredEs90VideoModal(modal,{videoSelector:'.es90-trunk-video-full',bodyClass:'es90-trunk-video-modal-open'});
 }
 
 function es90TrunkInlineMarkup(){
   return `<button class="es90-trunk-inline" type="button" aria-label="ES90 트렁크 로딩 영상 크게 보기" onclick="event.stopPropagation();openEs90TrunkVideo(this)">
-    <video class="es90-trunk-preview" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-trunk-poster.jpg" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-trunk-preview.mp4" type="video/mp4"></video>
+    <video class="es90-trunk-preview" muted loop playsinline webkit-playsinline preload="none" poster="./assets/media/es90-trunk-poster.jpg" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-trunk-preview.mp4" type="video/mp4"></video>
     <span class="es90-trunk-inline-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.6v12.8L18 12 8 5.6Z"/></svg></span>
   </button>`;
 }
@@ -18602,68 +18561,28 @@ function ensureEs90DigitalKeyVideoModal(){
   modal.innerHTML = `
     <div class="es90-digital-key-video-dialog">
       <button class="es90-digital-key-video-close" type="button" aria-label="영상 닫기">&times;</button>
-      <video class="es90-digital-key-video-preview-full" muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-digital-key-plus-poster.jpg?v=20260921-2" aria-hidden="true" tabindex="-1">
-        <source src="./assets/media/es90-digital-key-plus-preview.mp4?v=20260921-2" type="video/mp4">
-      </video>
-      <video class="es90-digital-key-video-full" muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-digital-key-plus-poster.jpg?v=20260921-2" disablepictureinpicture controlslist="nodownload">
+      <img class="es90-digital-key-video-preview-full" src="./assets/media/es90-digital-key-plus-poster.jpg?v=20260921-2" alt="" draggable="false" aria-hidden="true">
+      <video class="es90-digital-key-video-full" muted loop playsinline webkit-playsinline preload="none" poster="./assets/media/es90-digital-key-plus-poster.jpg?v=20260921-2" disablepictureinpicture controlslist="nodownload">
         <source src="./assets/media/es90-digital-key-plus-full.mp4?v=20260921-2" type="video/mp4">
       </video>
       <span class="es90-digital-key-video-badge">DIGITAL KEY PLUS FILM</span>
     </div>`;
   document.body.appendChild(modal);
   const video = modal.querySelector('.es90-digital-key-video-full');
-  const preview = modal.querySelector('.es90-digital-key-video-preview-full');
   video.defaultMuted = true;
   video.muted = true;
-  video.controls = false;
-  video.removeAttribute('controls');
-  const showFullVideo = ()=>{
-    modal.classList.add('is-playing');
-    preview.pause();
-  };
-  video.addEventListener('playing',showFullVideo);
-  const closeModal = ()=>{
-    video.pause();
-    preview.pause();
-    video.currentTime = 0;
-    preview.currentTime = 0;
-    modal.classList.remove('is-open','is-playing');
-    modal.hidden = true;
-    document.body.classList.remove('es90-digital-key-video-modal-open');
-    setEs90VideoSafeArea(false);
-    document.querySelectorAll('.es90-digital-key-preview').forEach(preview=>preview.play().catch(()=>{}));
-  };
-  modal.querySelector('.es90-digital-key-video-close').addEventListener('click',closeModal);
-  modal.addEventListener('click',event=>{ if(event.target===modal) closeModal(); });
-  document.addEventListener('keydown',event=>{ if(event.key==='Escape' && !modal.hidden) closeModal(); });
+  configureEs90VideoModal(modal,{videoSelector:'.es90-digital-key-video-full',closeSelector:'.es90-digital-key-video-close',bodyClass:'es90-digital-key-video-modal-open'});
   return modal;
 }
 
 function openEs90DigitalKeyVideo(trigger){
   const modal = ensureEs90DigitalKeyVideoModal();
-  const video = modal.querySelector('.es90-digital-key-video-full');
-  const modalPreview = modal.querySelector('.es90-digital-key-video-preview-full');
-  const inlinePreview = trigger?.querySelector('.es90-digital-key-preview') || document.querySelector('.es90-digital-key-preview');
-  const previewTime = inlinePreview?.currentTime || 0;
-  document.querySelectorAll('.es90-digital-key-preview').forEach(preview=>preview.pause());
-  modal.classList.remove('is-playing');
-  modal.hidden = false;
-  document.body.classList.add('es90-digital-key-video-modal-open');
-  setEs90VideoSafeArea(true);
-  requestAnimationFrame(()=>modal.classList.add('is-open'));
-  if(modalPreview.readyState>=1) modalPreview.currentTime = Math.min(previewTime,Math.max(0,(modalPreview.duration||previewTime)-.05));
-  modalPreview.play().catch(()=>{});
-  const syncFullVideoTime = ()=>{
-    video.currentTime = Math.min(previewTime,Math.max(0,(video.duration||previewTime)-.05));
-  };
-  if(video.readyState>=1) syncFullVideoTime();
-  else video.addEventListener('loadedmetadata',syncFullVideoTime,{once:true});
-  video.play().catch(()=>{});
+  openConfiguredEs90VideoModal(modal,{videoSelector:'.es90-digital-key-video-full',bodyClass:'es90-digital-key-video-modal-open'});
 }
 
 function es90DigitalKeyFilmInlineMarkup(){
   return `<button class="es90-digital-key-film-inline" type="button" aria-label="ES90 디지털 키 플러스 영상 크게 보기" onclick="event.stopPropagation();openEs90DigitalKeyVideo(this)">
-    <video class="es90-digital-key-preview" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-digital-key-plus-poster.jpg?v=20260921-2" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-digital-key-plus-preview.mp4?v=20260921-2" type="video/mp4"></video>
+    <video class="es90-digital-key-preview" muted loop playsinline webkit-playsinline preload="none" poster="./assets/media/es90-digital-key-plus-poster.jpg?v=20260921-2" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-digital-key-plus-preview.mp4?v=20260921-2" type="video/mp4"></video>
     <span class="es90-digital-key-film-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.6v12.8L18 12 8 5.6Z"/></svg></span>
   </button>`;
 }
@@ -18740,7 +18659,7 @@ function es90DriveMediaMarkup(){
   return `
     <div class="es90-drive-media">
       <button class="es90-drive-media-button" type="button" aria-label="ES90 주행 영상 전체 화면으로 재생">
-        <video class="es90-drive-preview" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-driving-poster.jpg" aria-hidden="true" tabindex="-1">
+        <video class="es90-drive-preview" muted loop playsinline webkit-playsinline preload="none" poster="./assets/media/es90-driving-poster.jpg" aria-hidden="true" tabindex="-1">
           <source src="./assets/media/es90-driving-preview.mp4" type="video/mp4">
         </video>
         <span class="es90-drive-media-shade" aria-hidden="true"></span>
@@ -18862,7 +18781,7 @@ function renderStep1(){
     if(grp.label.startsWith('PLUS')){
       cards.insertAdjacentHTML('beforeend',es90DriveMediaMarkup());
       cards.querySelector('.es90-drive-media-button').addEventListener('click',openEs90DriveVideo);
-      cards.querySelector('.es90-drive-preview').play().catch(()=>{});
+      initEs90InlineVideoPreviews(cards);
       ensureEs90DriveVideoModal();
     }
     wrap.appendChild(col);
@@ -19412,6 +19331,7 @@ if(score.priceDiff !== null){
   ensureEs90ChargingVideoModal();
   ensureEs90TrunkVideoModal();
   ensureEs90DigitalKeyVideoModal();
+  initEs90InlineVideoPreviews(panel);
   updatePkgCalc();
   renderUpgradeOptList(es90Trim);
   initBarAnimations();
@@ -20178,6 +20098,7 @@ function renderOptTable(cat){
       }).join('')}
     </tbody>
   `;
+  initEs90InlineVideoPreviews(table);
 }
 
 function getPackagePrice(brandKey, trim, pkgName){
