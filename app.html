@@ -19719,6 +19719,9 @@ function renderOptTable(cat){
             const isIncluded = it.name.trim()==='에어 서스펜션 및 액티브 섀시' ? hasAirSuspension : !hasAirSuspension;
             esCell = renderCell(isIncluded ? true : null);
           }
+          if(it.name.trim()==='트렁크 용량 (폴딩여부 표기)'){
+            esCell = `<span class="es90-trunk-with-film">${esCell}${es90TrunkInlineMarkup()}</span>`;
+          }
 
           const compSoundDetailByTrim = COMP_SOUND_DETAIL[STATE.brandKey] && COMP_SOUND_DETAIL[STATE.brandKey][it.name.trim()];
           const compSoundDetail = compSoundDetailByTrim && typeof compSoundDetailByTrim==='object'
