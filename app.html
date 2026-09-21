@@ -1037,10 +1037,10 @@ body.es90-video-modal-open{overflow:hidden!important;}
 .es90-charging-video-modal.is-open{opacity:1;}
 .es90-charging-video-dialog{position:relative;width:min(94vw,1280px);max-height:92dvh;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:16px;background:#000;box-shadow:0 24px 70px rgba(0,0,0,.5);}
 .es90-charging-video-full{display:block;width:100%;max-height:92dvh;aspect-ratio:16/9;object-fit:contain;background:#000;}
-.es90-charging-video-full.is-ipad-control-free::-webkit-media-controls{display:none!important;}
+.es90-charging-video-full::-webkit-media-controls{display:none!important;}
 .es90-charging-video-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,17,28,.08) 34%,rgba(4,17,28,.76) 100%);pointer-events:none;}
 .es90-charging-video-badge{position:absolute;left:20px;top:18px;padding:5px 11px;border:1px solid rgba(255,255,255,.46);border-radius:999px;background:rgba(7,27,44,.58);color:#fff;font-size:10px;font-weight:750;letter-spacing:.8px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none;}
-.es90-charging-video-copy{position:absolute;left:22px;right:76px;bottom:56px;display:flex;flex-direction:column;gap:3px;color:#fff;pointer-events:none;text-shadow:0 2px 9px rgba(0,0,0,.48);}
+.es90-charging-video-copy{position:absolute;left:22px;right:76px;bottom:18px;display:flex;flex-direction:column;gap:3px;color:#fff;pointer-events:none;text-shadow:0 2px 9px rgba(0,0,0,.48);}
 .es90-charging-video-copy strong{font-size:clamp(16px,2vw,25px);font-weight:750;letter-spacing:-.2px;}
 .es90-charging-video-copy span{color:rgba(255,255,255,.8);font-size:clamp(10px,1vw,13px);font-weight:500;}
 .es90-charging-video-close{position:absolute;z-index:3;right:12px;top:12px;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.4);border-radius:50%;background:rgba(3,17,28,.74);color:#fff;font-size:25px;font-weight:300;line-height:1;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
@@ -1061,7 +1061,7 @@ body.es90-charging-video-modal-open{overflow:hidden!important;}
   .es90-charging-video-modal{padding:0;background:#000;}
   .es90-charging-video-dialog{width:100vw;max-height:100dvh;border:0;border-radius:0;}
   .es90-charging-video-full{max-height:100dvh;}
-  .es90-charging-video-copy{left:16px;right:62px;bottom:50px;}
+  .es90-charging-video-copy{left:16px;right:62px;bottom:16px;}
 }
 </style>
 <style id="es90-modern-dashboard-v3">
@@ -18212,7 +18212,7 @@ function ensureEs90ChargingVideoModal(){
   modal.innerHTML = `
     <div class="es90-charging-video-dialog">
       <button class="es90-charging-video-close" type="button" aria-label="영상 닫기">&times;</button>
-      <video class="es90-charging-video-full" controls loop playsinline webkit-playsinline preload="metadata" poster="./assets/media/es90-charging-poster.jpg" controlslist="nodownload">
+      <video class="es90-charging-video-full" loop playsinline webkit-playsinline preload="metadata" poster="./assets/media/es90-charging-poster.jpg" disablepictureinpicture controlslist="nodownload">
         <source src="./assets/media/es90-charging-full.mp4" type="video/mp4">
       </video>
       <span class="es90-charging-video-shade" aria-hidden="true"></span>
@@ -18221,13 +18221,8 @@ function ensureEs90ChargingVideoModal(){
     </div>`;
   document.body.appendChild(modal);
   const video = modal.querySelector('.es90-charging-video-full');
-  const isIpad = /iPad/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-  if(isIpad){
-    video.controls = false;
-    video.removeAttribute('controls');
-    video.setAttribute('disablepictureinpicture','');
-    video.classList.add('is-ipad-control-free');
-  }
+  video.controls = false;
+  video.removeAttribute('controls');
   const closeModal = ()=>{
     video.pause();
     video.currentTime = 0;
