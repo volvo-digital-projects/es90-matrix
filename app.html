@@ -1036,7 +1036,10 @@ body.ipad-step3-scroll-limit #panel4.panel.show{
 .es90-video-modal[hidden]{display:none!important;}
 .es90-video-modal.is-open{opacity:1;}
 .es90-video-dialog{position:relative;width:min(calc(100vw - 32px),170dvh);max-height:calc(100dvh - 32px);overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:16px;background:#000;box-shadow:0 24px 70px rgba(0,0,0,.48);}
-.es90-video-full{display:block;width:100%;max-height:calc(100dvh - 32px);aspect-ratio:16/9;object-fit:contain;background:#000;}
+.es90-video-preview-full,.es90-video-full{display:block;width:100%;max-height:calc(100dvh - 32px);aspect-ratio:16/9;object-fit:contain;background:#000;}
+.es90-video-preview-full{position:absolute;z-index:0;inset:0;height:100%;}
+.es90-video-full{position:relative;z-index:1;opacity:0;transition:opacity .16s ease;}
+.es90-video-modal.is-playing .es90-video-full{opacity:1;}
 .es90-video-full::-webkit-media-controls{display:none!important;}
 .es90-video-close{position:absolute;z-index:2;right:12px;top:12px;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.38);border-radius:50%;background:rgba(3,17,28,.72);color:#fff;font-size:25px;font-weight:300;line-height:1;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 .es90-video-close:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
@@ -1122,7 +1125,7 @@ body.es90-laminated-window-modal-open{overflow:hidden!important;}
   #panel1 .es90-drive-media{flex:none;min-height:0;aspect-ratio:16/9;margin-top:2px;}
   .es90-video-modal{padding:0;background:#000;}
   .es90-video-dialog{width:100vw;max-height:100dvh;border:0;border-radius:0;}
-  .es90-video-full{max-height:100dvh;}
+  .es90-video-preview-full,.es90-video-full{max-height:100dvh;}
   .es90-charging-inline{width:34px;height:19px;flex-basis:34px;}
   .es90-charging-video-modal{padding:0;background:#000;}
   .es90-charging-video-dialog{width:100vw;max-height:100dvh;border:0;border-radius:0;}
@@ -18346,18 +18349,29 @@ function ensureEs90DriveVideoModal(){
   modal.innerHTML = `
     <div class="es90-video-dialog">
       <button class="es90-video-close" type="button" aria-label="영상 닫기">&times;</button>
-      <video class="es90-video-full" loop playsinline webkit-playsinline preload="metadata" poster="./assets/media/es90-driving-poster.jpg" disablepictureinpicture controlslist="nodownload">
+      <video class="es90-video-preview-full" muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-driving-poster.jpg" aria-hidden="true" tabindex="-1">
+        <source src="./assets/media/es90-driving-preview.mp4" type="video/mp4">
+      </video>
+      <video class="es90-video-full" loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-driving-poster.jpg" disablepictureinpicture controlslist="nodownload">
         <source src="./assets/media/es90-driving-full.mp4" type="video/mp4">
       </video>
     </div>`;
   document.body.appendChild(modal);
   const video = modal.querySelector('.es90-video-full');
+  const preview = modal.querySelector('.es90-video-preview-full');
   video.controls = false;
   video.removeAttribute('controls');
+  const showFullVideo = ()=>{
+    modal.classList.add('is-playing');
+    preview.pause();
+  };
+  video.addEventListener('playing',showFullVideo);
   const closeModal = ()=>{
     video.pause();
+    preview.pause();
     video.currentTime = 0;
-    modal.classList.remove('is-open');
+    preview.currentTime = 0;
+    modal.classList.remove('is-open','is-playing');
     modal.hidden = true;
     document.body.classList.remove('es90-video-modal-open');
     setEs90VideoSafeArea(false);
@@ -18375,12 +18389,22 @@ function ensureEs90DriveVideoModal(){
 function openEs90DriveVideo(){
   const modal = ensureEs90DriveVideoModal();
   const video = modal.querySelector('.es90-video-full');
-  document.querySelector('.es90-drive-preview')?.pause();
+  const modalPreview = modal.querySelector('.es90-video-preview-full');
+  const inlinePreview = document.querySelector('.es90-drive-preview');
+  const previewTime = inlinePreview?.currentTime || 0;
+  inlinePreview?.pause();
+  modal.classList.remove('is-playing');
   modal.hidden = false;
   document.body.classList.add('es90-video-modal-open');
   setEs90VideoSafeArea(true);
   requestAnimationFrame(()=>modal.classList.add('is-open'));
-  video.currentTime = 0;
+  if(modalPreview.readyState>=1) modalPreview.currentTime = Math.min(previewTime,Math.max(0,(modalPreview.duration||previewTime)-.05));
+  modalPreview.play().catch(()=>{});
+  const syncFullVideoTime = ()=>{
+    video.currentTime = Math.min(previewTime,Math.max(0,(video.duration||previewTime)-.05));
+  };
+  if(video.readyState>=1) syncFullVideoTime();
+  else video.addEventListener('loadedmetadata',syncFullVideoTime,{once:true});
   video.play().catch(()=>{});
 }
 
