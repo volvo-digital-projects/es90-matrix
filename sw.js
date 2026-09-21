@@ -1,4 +1,4 @@
-const CACHE_NAME = 'es90-sales-app-v247';
+const CACHE_NAME = 'es90-sales-app-v248';
 const APP_SHELL = ['./', './index.html', './app.html', './charger.html', './administrative-dongs.json', './administrative-centers.json', './manifest.webmanifest', './icons/es90-icon.svg', './assets/charger-marker-350kw-v1.png', './assets/es90-login-cover-lights-on-v3-led.png', './assets/es90-headlight-shape-mask-v1.png', './assets/es90-trim-plus.webp?v=20260820-1', './assets/es90-trim-ultra.webp?v=20260820-1', './assets/es90-trim-performance-ultra.webp?v=20260820-1', './assets/dolby-atmos.png', './assets/es90-bnw-dolby-atmos-thumb.png', './assets/es90-digital-key-plus-thumb.png'];
 
 self.addEventListener('install', event => {
@@ -18,6 +18,13 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+
+  // 동영상은 Range 요청을 그대로 전달해 iPad 탐색·전체화면 재생을 안정적으로 유지하고,
+  // 80MB 전체 영상을 CacheStorage에 중복 저장하지 않는다.
+  if (url.pathname.endsWith('.mp4')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
   const protectedPdfPage = /\/assets\/docs\/(?:es90-bnw-dolby-pages|es90-digital-key-plus-pages)\/page-\d+\.webp$/i.test(url.pathname);
   if (protectedPdfPage) {

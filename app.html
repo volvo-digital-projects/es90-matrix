@@ -983,12 +983,61 @@ body.ipad-step3-scroll-limit #panel4.panel.show{
 /* Divider between columns */
 .trim-split-col:first-child{border-right:1.5px solid var(--line);}
 
+/* PLUS column drive film: lightweight loop preview, full film on demand */
+#panel1 .es90-drive-media{
+  position:relative;
+  flex:1 1 auto;
+  min-height:150px;
+  overflow:hidden;
+  border:1px solid #d7e1e8;
+  border-radius:var(--step-area-radius);
+  background:#071b2c;
+  box-shadow:0 8px 22px rgba(7,27,44,.10);
+}
+#panel1 .es90-drive-media-button{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  padding:0;
+  overflow:hidden;
+  border:0;
+  border-radius:inherit;
+  background:#071b2c;
+  color:#fff;
+  cursor:pointer;
+  text-align:left;
+  -webkit-tap-highlight-color:transparent;
+}
+#panel1 .es90-drive-media-button:focus-visible{outline:3px solid rgba(241,90,36,.82);outline-offset:2px;}
+#panel1 .es90-drive-preview{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
+#panel1 .es90-drive-media-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,17,28,.08) 32%,rgba(4,17,28,.74) 100%);pointer-events:none;}
+#panel1 .es90-drive-media-badge{position:absolute;left:14px;top:13px;padding:4px 9px;border:1px solid rgba(255,255,255,.42);border-radius:999px;background:rgba(7,27,44,.54);font-size:8px;font-weight:750;letter-spacing:.9px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none;}
+#panel1 .es90-drive-media-copy{position:absolute;left:15px;right:58px;bottom:13px;display:flex;flex-direction:column;gap:2px;pointer-events:none;}
+#panel1 .es90-drive-media-copy strong{font-size:13px;font-weight:700;letter-spacing:-.1px;}
+#panel1 .es90-drive-media-copy span{color:rgba(255,255,255,.76);font-size:9px;font-weight:500;}
+#panel1 .es90-drive-media-play{position:absolute;right:15px;bottom:13px;display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(255,255,255,.56);border-radius:50%;background:rgba(7,27,44,.58);box-shadow:0 4px 14px rgba(0,0,0,.18);pointer-events:none;}
+#panel1 .es90-drive-media-play svg{width:14px;height:14px;margin-left:2px;fill:#fff;}
+.es90-video-modal{position:fixed;z-index:5000;inset:0;display:flex;align-items:center;justify-content:center;padding:max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));background:rgba(1,8,14,.92);opacity:0;transition:opacity .18s ease;}
+.es90-video-modal[hidden]{display:none!important;}
+.es90-video-modal.is-open{opacity:1;}
+.es90-video-dialog{position:relative;width:min(94vw,1280px);max-height:92dvh;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:16px;background:#000;box-shadow:0 24px 70px rgba(0,0,0,.48);}
+.es90-video-full{display:block;width:100%;max-height:92dvh;aspect-ratio:16/9;object-fit:contain;background:#000;}
+.es90-video-close{position:absolute;z-index:2;right:12px;top:12px;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.38);border-radius:50%;background:rgba(3,17,28,.72);color:#fff;font-size:25px;font-weight:300;line-height:1;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.es90-video-close:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+body.es90-video-modal-open{overflow:hidden!important;}
+
 @media screen and (max-width:767px){
   .trim-split-wrap{grid-template-columns:1fr;}
   .trim-split-col{padding:0;}
   .trim-split-col:last-child{padding:0;}
   .trim-split-col:first-child{border-right:none;border-bottom:1.5px solid var(--line);padding-bottom:16px;margin-bottom:16px;}
   .trim-col-cards .trim-card{height:auto;}
+  #panel1 .es90-drive-media{flex:none;min-height:0;aspect-ratio:16/9;margin-top:2px;}
+  .es90-video-modal{padding:0;background:#000;}
+  .es90-video-dialog{width:100vw;max-height:100dvh;border:0;border-radius:0;}
+  .es90-video-full{max-height:100dvh;}
 }
 </style>
 <style id="es90-modern-dashboard-v3">
@@ -18079,6 +18128,72 @@ function reservationPercent(count,total){
   return total>0 ? (Number(count)/total*100).toFixed(1) : '0.0';
 }
 
+function ensureEs90DriveVideoModal(){
+  let modal = document.getElementById('es90DriveVideoModal');
+  if(modal) return modal;
+  modal = document.createElement('div');
+  modal.className = 'es90-video-modal';
+  modal.id = 'es90DriveVideoModal';
+  modal.hidden = true;
+  modal.setAttribute('role','dialog');
+  modal.setAttribute('aria-modal','true');
+  modal.setAttribute('aria-label','ES90 주행 영상 전체 재생');
+  modal.innerHTML = `
+    <div class="es90-video-dialog">
+      <button class="es90-video-close" type="button" aria-label="영상 닫기">&times;</button>
+      <video class="es90-video-full" controls playsinline webkit-playsinline preload="metadata" poster="./assets/media/es90-driving-poster.jpg" controlslist="nodownload">
+        <source src="./assets/media/es90-driving-full.mp4" type="video/mp4">
+      </video>
+    </div>`;
+  document.body.appendChild(modal);
+  const video = modal.querySelector('.es90-video-full');
+  const closeModal = ()=>{
+    video.pause();
+    video.currentTime = 0;
+    modal.classList.remove('is-open');
+    modal.hidden = true;
+    document.body.classList.remove('es90-video-modal-open');
+    document.querySelector('.es90-drive-preview')?.play().catch(()=>{});
+  };
+  modal.querySelector('.es90-video-close').addEventListener('click',closeModal);
+  modal.addEventListener('click',event=>{ if(event.target===modal) closeModal(); });
+  video.addEventListener('webkitendfullscreen',closeModal);
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape' && !modal.hidden) closeModal();
+  });
+  return modal;
+}
+
+function openEs90DriveVideo(){
+  const modal = ensureEs90DriveVideoModal();
+  const video = modal.querySelector('.es90-video-full');
+  document.querySelector('.es90-drive-preview')?.pause();
+  modal.hidden = false;
+  document.body.classList.add('es90-video-modal-open');
+  requestAnimationFrame(()=>modal.classList.add('is-open'));
+  video.currentTime = 0;
+  const isTouchApple = navigator.maxTouchPoints>1 && /iPad|iPhone|Macintosh/i.test(navigator.userAgent);
+  if(isTouchApple && typeof video.webkitEnterFullscreen==='function'){
+    try{ video.webkitEnterFullscreen(); }catch(_){ /* 확대 모달을 그대로 사용한다. */ }
+  }
+  video.play().catch(()=>{});
+}
+
+function es90DriveMediaMarkup(){
+  return `
+    <div class="es90-drive-media">
+      <button class="es90-drive-media-button" type="button" aria-label="ES90 주행 영상 전체 화면으로 재생">
+        <video class="es90-drive-preview" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-driving-poster.jpg" aria-hidden="true" tabindex="-1">
+          <source src="./assets/media/es90-driving-preview.mp4" type="video/mp4">
+        </video>
+        <span class="es90-drive-media-shade" aria-hidden="true"></span>
+        <span class="es90-drive-media-badge">ES90 DRIVE FILM</span>
+        <span class="es90-drive-media-copy"><strong>도로 위의 Volvo ES90</strong><span>화면을 누르면 전체 영상이 재생됩니다</span></span>
+        <span class="es90-drive-media-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.6v12.8L18 12 8 5.6Z"/></svg></span>
+      </button>
+    </div>`;
+}
+
 function renderStep1(){
   const panel = document.getElementById('panel1');
   const reservationIntegrity = validateReservationData();
@@ -18188,6 +18303,12 @@ function renderStep1(){
       });
       cards.appendChild(card);
     });
+    if(grp.label.startsWith('PLUS')){
+      cards.insertAdjacentHTML('beforeend',es90DriveMediaMarkup());
+      cards.querySelector('.es90-drive-media-button').addEventListener('click',openEs90DriveVideo);
+      cards.querySelector('.es90-drive-preview').play().catch(()=>{});
+      ensureEs90DriveVideoModal();
+    }
     wrap.appendChild(col);
   });
   initBarAnimations();
