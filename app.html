@@ -232,9 +232,10 @@ button{font-family:inherit;}
 
 .tab-btn.active{background:var(--orange);border-color:var(--orange);color:#fff;}
 .tab-btn .tab-count{font-size:10px;opacity:.7;margin-left:3px;}
-.menu-video-indicator{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;flex:0 0 15px;color:#c9782a;opacity:.94;}
-.menu-video-indicator svg{display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;}
-.tab-btn.active .menu-video-indicator{color:#fff;opacity:.96;}
+.menu-video-indicator{display:inline-flex;align-items:center;justify-content:center;width:18px;height:15px;flex:0 0 18px;color:#36546b;opacity:1;}
+.menu-video-indicator svg{display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.menu-video-indicator .menu-video-play{fill:currentColor;stroke:none;}
+.tab-btn.active .menu-video-indicator{color:#fff;opacity:1;}
 
 /* ===== Cards generic ===== */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px;}
@@ -1425,7 +1426,7 @@ body:not(.cover-open){overflow-x:clip;overflow-y:visible;}
 .footer-action-money-icon{display:inline-flex;width:18px;height:18px;flex:0 0 18px;color:#c9782a;}
 .footer-action-money-icon svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .footer-actions .btn-video-menu{display:inline-flex;align-items:center;justify-content:center;gap:7px;}
-.footer-actions .btn-video-menu .menu-video-indicator{width:17px;height:17px;flex-basis:17px;color:#c9782a;}
+.footer-actions .btn-video-menu .menu-video-indicator{width:19px;height:16px;flex-basis:19px;color:#36546b;}
 
 @media(max-width:900px){
   .topbar-inner,.steps,.content{padding-left:20px;padding-right:20px;}
@@ -17268,7 +17269,7 @@ const CAT_LABEL = {
 const CAT_ORDER = Object.keys(CAT_LABEL);
 
 function es90VideoMenuIndicatorMarkup(){
-  return `<span class="menu-video-indicator" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9.2" cy="10.1" r="6.2"/><circle cx="9.2" cy="10.1" r="1"/><circle cx="9.2" cy="6.5" r="1.15"/><circle cx="12.35" cy="8.3" r="1.15"/><circle cx="11.15" cy="13.15" r="1.15"/><circle cx="7.05" cy="13.05" r="1.15"/><circle cx="6.05" cy="8.15" r="1.15"/><path d="M14.1 14.4c2.3.2 3.2 1.2 3.2 2.7 0 1.6 1.1 2.3 3.2 2.3"/></svg></span>`;
+  return `<span class="menu-video-indicator" aria-hidden="true"><svg viewBox="0 0 24 20"><rect x="1.5" y="2" width="21" height="16" rx="2"/><path d="M6 2v16M18 2v16M1.5 7h4.5M18 7h4.5M1.5 13h4.5M18 13h4.5"/><path class="menu-video-play" d="m10 6.7 5.4 3.3-5.4 3.3Z"/></svg></span>`;
 }
 
 function fmtWon(n){
