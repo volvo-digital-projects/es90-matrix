@@ -19603,6 +19603,7 @@ function selectOptionCategory(categoryKey){
   renderPkgBox(cat);
   syncCatCardDim(categoryKey);
   setCategoryBarActive(categoryKey);
+  pinOptionAnalysisCategory(categoryKey);
 }
 
 function clearCategoryBarActive(){
@@ -19632,6 +19633,14 @@ function normalizeAnalysisItemName(value){
 function clearPinnedOptionAnalysis(){
   document.querySelectorAll('.cat-card.option-analysis-pinned').forEach(card=>card.classList.remove('option-analysis-pinned'));
   document.querySelectorAll('.cat-card-list li.option-analysis-item-pinned').forEach(item=>item.classList.remove('option-analysis-item-pinned'));
+}
+function pinOptionAnalysisCategory(categoryKey){
+  PINNED_OPTION_ANALYSIS = {
+    categoryKey,
+    itemName:'',
+    context:[STATE.es90Trim,STATE.brandKey,STATE.compTrim].join('|')
+  };
+  applyPinnedOptionAnalysis(false);
 }
 let OPTION_ANALYSIS_HERO_RESTORE_HANDLER = null;
 function releaseResultHeroForOptionAnalysis(){
