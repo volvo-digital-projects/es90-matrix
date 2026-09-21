@@ -18632,6 +18632,7 @@ function ensureEs90LaminatedWindowModal(){
     modal.classList.remove('is-open');
     modal.hidden = true;
     document.body.classList.remove('es90-laminated-window-modal-open');
+    setEs90VideoSafeArea(false);
   };
   closeButton.addEventListener('click',closeModal);
   modal.addEventListener('click',event=>{ if(event.target===modal) closeModal(); });
@@ -18658,6 +18659,7 @@ function openEs90LaminatedWindowImage(){
   const modal = ensureEs90LaminatedWindowModal();
   const viewerId = es90CurrentViewerCdsid();
   modal.querySelectorAll('.es90-laminated-window-watermark').forEach(mark=>{ mark.textContent = viewerId; });
+  setEs90VideoSafeArea(true);
   modal.hidden = false;
   document.body.classList.add('es90-laminated-window-modal-open');
   requestAnimationFrame(()=>{
