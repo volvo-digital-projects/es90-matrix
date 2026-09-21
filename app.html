@@ -18196,10 +18196,6 @@ function openEs90DriveVideo(){
   document.body.classList.add('es90-video-modal-open');
   requestAnimationFrame(()=>modal.classList.add('is-open'));
   video.currentTime = 0;
-  const isTouchApple = navigator.maxTouchPoints>1 && /iPad|iPhone|Macintosh/i.test(navigator.userAgent);
-  if(isTouchApple && typeof video.webkitEnterFullscreen==='function'){
-    try{ video.webkitEnterFullscreen(); }catch(_){ /* 확대 모달을 그대로 사용한다. */ }
-  }
   video.play().catch(()=>{});
 }
 
