@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "source": {
     "name": "무공해차 통합누리집",
     "paymentUrl": "https://ev.or.kr/nportal/buySupprt/initSubsidyPaymentCheckAction.do",
@@ -30,6 +30,11 @@
     "officiallyListed": false,
     "officialModels": [],
     "message": "ES90은 현재 공식 모델별 보조금 목록에 미등록되어, 금액은 50% 최대 예상액으로 표시합니다."
+  },
+  "supplementaryBudget": {
+    "detected": true,
+    "regionCount": 117,
+    "keyword": "추경"
   },
   "regions": [
     {

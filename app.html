@@ -1439,10 +1439,20 @@ body:not(.cover-open){overflow-x:clip;overflow-y:visible;}
 .pkg-calc-total span:last-child{color:var(--orange-deep)!important;font-weight:800!important;}
 .footer-actions{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px!important;align-items:stretch;}
 .footer-actions .btn-secondary{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;min-height:46px!important;padding:0 14px!important;text-align:center;line-height:1.25;}
-.footer-actions .btn-live-subsidy{display:inline-flex;align-items:center;justify-content:center;gap:7px;color:var(--navy)!important;padding-left:10px!important;padding-right:10px!important;}
-.footer-actions .btn-live-subsidy>span:last-child{line-height:1.15;text-align:center;white-space:normal;}
+.footer-actions .btn-live-subsidy{position:relative;isolation:isolate;overflow:visible!important;display:inline-flex;align-items:center;justify-content:center;gap:7px;color:var(--navy)!important;padding-left:10px!important;padding-right:10px!important;}
+.footer-actions .btn-live-subsidy>.btn-live-subsidy-label{line-height:1.15;text-align:center;white-space:normal;}
 .footer-action-money-icon{display:inline-flex;width:18px;height:18px;flex:0 0 18px;color:#c9782a;}
 .footer-action-money-icon svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.subsidy-supplement-badge{position:absolute;z-index:3;right:-7px;top:-13px;display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:23px;padding:3px 8px 3px 6px;border:1px solid rgba(255,255,255,.82);border-radius:999px;background:linear-gradient(135deg,#ff5a4f 0%,#df1f34 52%,#a90f2c 100%);box-shadow:0 3px 8px rgba(150,14,37,.28),inset 0 1px 0 rgba(255,255,255,.35);color:#fff;font-size:10px;font-weight:900;letter-spacing:-.02em;line-height:1;white-space:nowrap;pointer-events:none;}
+.subsidy-supplement-badge[hidden]{display:none!important;}
+.subsidy-supplement-badge::before{content:"";position:absolute;z-index:-2;inset:-7px;border-radius:999px;background:radial-gradient(ellipse at center,rgba(255,78,83,.62) 0%,rgba(240,34,58,.26) 45%,rgba(224,20,52,0) 74%);opacity:.16;animation:subsidySupplementGlow 2.8s ease-in-out infinite;pointer-events:none;}
+.subsidy-supplement-badge::after{content:"";position:absolute;z-index:1;inset:1px;border-radius:999px;background:linear-gradient(110deg,transparent 22%,rgba(255,255,255,0) 34%,rgba(255,255,255,.82) 49%,rgba(255,255,255,0) 64%,transparent 76%);background-size:240% 100%;background-position:145% 0;animation:subsidySupplementShine 2.8s ease-in-out infinite;pointer-events:none;}
+.subsidy-supplement-badge-icon{position:relative;z-index:2;display:inline-grid;place-items:center;width:14px;height:14px;flex:0 0 14px;border-radius:50%;background:rgba(93,0,21,.28);}
+.subsidy-supplement-badge-icon svg{display:block;width:9px;height:9px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.subsidy-supplement-badge-text{position:relative;z-index:2;}
+@keyframes subsidySupplementGlow{0%,18%,100%{opacity:.14;transform:scale(.94);}42%{opacity:.9;transform:scale(1.13);}62%{opacity:.28;transform:scale(1.02);}}
+@keyframes subsidySupplementShine{0%,20%{background-position:145% 0;opacity:0;}30%{opacity:1;}52%{background-position:-45% 0;opacity:1;}60%,100%{background-position:-45% 0;opacity:0;}}
+@media(prefers-reduced-motion:reduce){.subsidy-supplement-badge::before,.subsidy-supplement-badge::after{animation:none;}.subsidy-supplement-badge::before{opacity:.32;}}
 .footer-actions .btn-video-menu{display:inline-flex;align-items:center;justify-content:center;gap:7px;}
 .footer-actions .btn-video-menu .menu-video-indicator{width:19px;height:16px;flex-basis:19px;color:#36546b;}
 
@@ -17765,6 +17775,43 @@ function renderApp(){
 
 function showUpdateModal(){ document.getElementById('updateModal').classList.add('show'); }
 function hideUpdateModal(){ document.getElementById('updateModal').classList.remove('show'); }
+let subsidySupplementStatusPromise = null;
+function loadSubsidySupplementStatus(){
+  if(!subsidySupplementStatusPromise){
+    subsidySupplementStatusPromise = fetch(`./subsidy-data.json?v=${Date.now()}`,{cache:'no-store'})
+      .then(response=>{
+        if(!response.ok) throw new Error(`subsidy data ${response.status}`);
+        return response.json();
+      })
+      .then(data=>{
+        const status = data && data.supplementaryBudget;
+        return {
+          detected: status?.detected === true,
+          regionCount: Number.isFinite(Number(status?.regionCount)) ? Number(status.regionCount) : 0
+        };
+      })
+      .catch(error=>{
+        console.warn('추경 발생 상태를 확인하지 못했습니다.',error);
+        return {detected:false,regionCount:0};
+      });
+  }
+  return subsidySupplementStatusPromise;
+}
+function syncSubsidySupplementBadges(){
+  const badges = Array.from(document.querySelectorAll('[data-subsidy-supplement-badge]'));
+  if(!badges.length) return;
+  badges.forEach(badge=>{ badge.hidden = true; });
+  loadSubsidySupplementStatus().then(status=>{
+    badges.forEach(badge=>{
+      badge.hidden = !status.detected;
+      const description = status.detected
+        ? `무공해차 통합누리집 기준 전국 ${status.regionCount}개 지역 추경 발생 확인`
+        : '';
+      badge.setAttribute('aria-label',description);
+      badge.title = description;
+    });
+  });
+}
 function openLiveSubsidyStatus(){
   const returnState = JSON.stringify({
     es90Trim: STATE.es90Trim,
@@ -19233,7 +19280,7 @@ if(score.priceDiff !== null){
       <button class="btn-secondary" onclick="resetAll()">← 처음부터 다시</button>
       <button class="btn-secondary" onclick="showPanel(1)">☷ ES90 대기고객 선택</button>
       <button class="btn-secondary" onclick="openStep2WithDirectDefault()">⇄ 다른 경쟁모델과 비교</button>
-      <button class="btn-secondary btn-live-subsidy" onclick="openLiveSubsidyStatus()"><span class="footer-action-money-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.8" y="5.5" width="18.4" height="13" rx="2.4"/><path d="M7 5.5a3.5 3.5 0 0 1-4.2 3.4M17 5.5a3.5 3.5 0 0 0 4.2 3.4M7 18.5a3.5 3.5 0 0 0-4.2-3.4M17 18.5a3.5 3.5 0 0 1 4.2-3.4"/><circle cx="12" cy="12" r="3.1"/><path d="M10.7 10.8h2.6M10.7 12.1h2.6M12 10.8v2.8"/></svg></span><span>전국 실시간 보조금 현황</span></button>
+      <button class="btn-secondary btn-live-subsidy" onclick="openLiveSubsidyStatus()"><span class="footer-action-money-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.8" y="5.5" width="18.4" height="13" rx="2.4"/><path d="M7 5.5a3.5 3.5 0 0 1-4.2 3.4M17 5.5a3.5 3.5 0 0 0 4.2 3.4M7 18.5a3.5 3.5 0 0 0-4.2-3.4M17 18.5a3.5 3.5 0 0 1 4.2-3.4"/><circle cx="12" cy="12" r="3.1"/><path d="M10.7 10.8h2.6M10.7 12.1h2.6M12 10.8v2.8"/></svg></span><span class="btn-live-subsidy-label">전국 실시간 보조금 현황</span><span class="subsidy-supplement-badge" data-subsidy-supplement-badge hidden><span class="subsidy-supplement-badge-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 2.2a3.2 3.2 0 0 0-3.2 3.2v1.8L3.6 9.4h8.8l-1.2-2.2V5.4A3.2 3.2 0 0 0 8 2.2Z"/><path d="M6.7 11.2a1.4 1.4 0 0 0 2.6 0"/></svg></span><span class="subsidy-supplement-badge-text">추경발생</span></span></button>
       <button class="btn-secondary btn-video-menu" onclick="open350kwChargerNetwork()"><span>⚡ 350kW 이상 초고속 충전</span>${es90VideoMenuIndicatorMarkup()}</button>
     </div>
 
@@ -19252,6 +19299,7 @@ if(score.priceDiff !== null){
   initBarAnimations();
   initIpadPinnedResultHero();
   equalizeStep3BadgeWidths(panel);
+  syncSubsidySupplementBadges();
 
 }
 

@@ -87,14 +87,38 @@ class SubsidySnapshotTests(unittest.TestCase):
                 "2026.12.04 18:00",
                 snapshot["regions"][0]["applicationDeadline"],
             )
-            self.assertEqual(4, snapshot["schemaVersion"])
+            self.assertEqual(5, snapshot["schemaVersion"])
             self.assertEqual("전기승용 전체", snapshot["allocationBasis"])
+            self.assertEqual(
+                {"detected": False, "regionCount": 0, "keyword": "추경"},
+                snapshot["supplementaryBudget"],
+            )
             self.assertEqual(842, snapshot["regions"][149]["combinedMaxManwon"])
             self.assertEqual(
                 "live-selected-regions-with-last-known-good-fallback",
                 snapshot["collection"]["prices"],
             )
             self.assertTrue(snapshot["modelStatus"]["officiallyListed"])
+
+    def test_supplementary_budget_is_detected_from_official_notice(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            payment = temp / "payment.html"
+            price = temp / "price.html"
+            source = payment_html(150).replace(
+                "<td>본공고</td>",
+                "<td>본공고 1 / 추경1차 1</td>",
+                1,
+            )
+            payment.write_text(source, encoding="utf-8")
+            price.write_text(new_price_html(), encoding="utf-8")
+
+            snapshot = build_snapshot(payment, price)
+
+            self.assertEqual(
+                {"detected": True, "regionCount": 1, "keyword": "추경"},
+                snapshot["supplementaryBudget"],
+            )
 
     def test_incomplete_payment_data_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

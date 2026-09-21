@@ -289,8 +289,11 @@ def build_snapshot(
         model_mode = "not-listed"
 
     now = datetime.now(SEOUL).replace(microsecond=0).isoformat()
+    supplementary_budget_region_count = sum(
+        1 for region in regions if "추경" in str(region.get("notice", ""))
+    )
     return {
-        "schemaVersion": 4,
+        "schemaVersion": 5,
         "source": {
             "name": "무공해차 통합누리집",
             "paymentUrl": PAYMENT_URL,
@@ -310,6 +313,11 @@ def build_snapshot(
             "model": model_mode,
         },
         "modelStatus": model_status,
+        "supplementaryBudget": {
+            "detected": supplementary_budget_region_count > 0,
+            "regionCount": supplementary_budget_region_count,
+            "keyword": "추경",
+        },
         "regions": regions,
     }
 
