@@ -225,13 +225,16 @@ button{font-family:inherit;}
 
 /* ===== Tabs ===== */
 .tab-row{display:flex;gap:6px;margin:18px 0 12px;padding-bottom:2px;}
-.tab-btn{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;background:var(--card);border:1px solid var(--line);color:var(--ink-soft);font-size:12.5px;font-weight:500;padding:8px 8px;border-radius:20px;cursor:pointer;transition:all .15s;}
+.tab-btn{display:flex;align-items:center;justify-content:center;gap:5px;flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;background:var(--card);border:1px solid var(--line);color:var(--ink-soft);font-size:12.5px;font-weight:500;padding:8px 8px;border-radius:20px;cursor:pointer;transition:all .15s;}
 @media(max-width:640px){.tab-row{flex-wrap:wrap;}.tab-btn{flex:1 1 calc(25% - 6px);font-size:11px;padding:7px 4px;}}
 .tab-row::-webkit-scrollbar{height:4px;}
 .tab-row::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
 
 .tab-btn.active{background:var(--orange);border-color:var(--orange);color:#fff;}
 .tab-btn .tab-count{font-size:10px;opacity:.7;margin-left:3px;}
+.menu-video-indicator{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;flex:0 0 15px;color:#c9782a;opacity:.94;}
+.menu-video-indicator svg{display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;}
+.tab-btn.active .menu-video-indicator{color:#fff;opacity:.96;}
 
 /* ===== Cards generic ===== */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px;}
@@ -1421,6 +1424,8 @@ body:not(.cover-open){overflow-x:clip;overflow-y:visible;}
 .footer-actions .btn-live-subsidy>span:last-child{line-height:1.15;text-align:center;white-space:normal;}
 .footer-action-money-icon{display:inline-flex;width:18px;height:18px;flex:0 0 18px;color:#c9782a;}
 .footer-action-money-icon svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.footer-actions .btn-video-menu{display:inline-flex;align-items:center;justify-content:center;gap:7px;}
+.footer-actions .btn-video-menu .menu-video-indicator{width:17px;height:17px;flex-basis:17px;color:#c9782a;}
 
 @media(max-width:900px){
   .topbar-inner,.steps,.content{padding-left:20px;padding-right:20px;}
@@ -17262,6 +17267,10 @@ const CAT_LABEL = {
 };
 const CAT_ORDER = Object.keys(CAT_LABEL);
 
+function es90VideoMenuIndicatorMarkup(){
+  return `<span class="menu-video-indicator" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9.2" cy="10.1" r="6.2"/><circle cx="9.2" cy="10.1" r="1"/><circle cx="9.2" cy="6.5" r="1.15"/><circle cx="12.35" cy="8.3" r="1.15"/><circle cx="11.15" cy="13.15" r="1.15"/><circle cx="7.05" cy="13.05" r="1.15"/><circle cx="6.05" cy="8.15" r="1.15"/><path d="M14.1 14.4c2.3.2 3.2 1.2 3.2 2.7 0 1.6 1.1 2.3 3.2 2.3"/></svg></span>`;
+}
+
 function fmtWon(n){
   if(n===null||n===undefined) return '정보없음';
   return (n/10000).toLocaleString('ko-KR',{maximumFractionDigits:0}) + '만원';
@@ -19138,7 +19147,7 @@ if(score.priceDiff !== null){
       <button class="btn-secondary" onclick="showPanel(1)">☷ ES90 대기고객 선택</button>
       <button class="btn-secondary" onclick="openStep2WithDirectDefault()">⇄ 다른 경쟁모델과 비교</button>
       <button class="btn-secondary btn-live-subsidy" onclick="openLiveSubsidyStatus()"><span class="footer-action-money-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.8" y="5.5" width="18.4" height="13" rx="2.4"/><path d="M7 5.5a3.5 3.5 0 0 1-4.2 3.4M17 5.5a3.5 3.5 0 0 0 4.2 3.4M7 18.5a3.5 3.5 0 0 0-4.2-3.4M17 18.5a3.5 3.5 0 0 1 4.2-3.4"/><circle cx="12" cy="12" r="3.1"/><path d="M10.7 10.8h2.6M10.7 12.1h2.6M12 10.8v2.8"/></svg></span><span>전국 실시간 보조금 현황</span></button>
-      <button class="btn-secondary" onclick="open350kwChargerNetwork()">⚡ 350kW 이상 초고속 충전</button>
+      <button class="btn-secondary btn-video-menu" onclick="open350kwChargerNetwork()"><span>⚡ 350kW 이상 초고속 충전</span>${es90VideoMenuIndicatorMarkup()}</button>
     </div>
 
     <div class="footer-disclaimer" style="text-align:left;">상기 정보 및 비교결과는 해당차량의 제원 및 옵션정보에 따라 수시로 변경가능합니다.</div>
@@ -19422,7 +19431,8 @@ function renderCatTabs(cats){
   const tabs = document.getElementById('catTabs');
   tabs.innerHTML = cats.map(c=>{
     const active = c.category===STATE.activeTab ? 'active':'';
-    return `<button class="tab-btn ${active}" data-cat="${c.category}" onclick="selectOptionCategory('${c.category.replace(/'/g,"\\'")}')">${c.label}</button>`;
+    const videoIndicator = ['Telematics','Cargo Area'].includes(c.category) ? es90VideoMenuIndicatorMarkup() : '';
+    return `<button class="tab-btn ${active}" data-cat="${c.category}" onclick="selectOptionCategory('${c.category.replace(/'/g,"\\'")}')">${c.label}${videoIndicator}</button>`;
   }).join('');
   // item: keep "옵션구성 분석결과" cards in sync with whichever tab is active on first render too
   syncCatCardDim(STATE.activeTab);
