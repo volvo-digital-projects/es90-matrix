@@ -1357,7 +1357,6 @@ body:not(.cover-open){overflow-x:clip;overflow-y:visible;}
     #panel4 .result-hero.ipad-fixed{position:fixed;top:140px;left:var(--ipad-hero-left);right:auto;width:var(--ipad-hero-width);margin:0;-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden;contain:paint;}
   }
 }
-#panel4 .result-hero.option-analysis-unpinned{position:relative!important;top:auto!important;left:auto!important;right:auto!important;width:100%!important;margin:0!important;-webkit-transform:none!important;transform:none!important;}
 .result-title{position:relative;z-index:1;color:#fff!important;font-size:20px!important;font-weight:650!important;line-height:1.25!important;letter-spacing:-.45px!important;}
 .title-date-badge{background:rgba(255,255,255,.11)!important;border:1px solid rgba(255,255,255,.13)!important;color:rgba(255,255,255,.74)!important;}
 .result-badges{position:relative;z-index:1;column-gap:7px!important;row-gap:5px!important;margin:7px 0 9px!important;}
@@ -19642,36 +19641,17 @@ function pinOptionAnalysisCategory(categoryKey){
   };
   applyPinnedOptionAnalysis(false);
 }
-let OPTION_ANALYSIS_HERO_RESTORE_HANDLER = null;
-function releaseResultHeroForOptionAnalysis(){
-  if(OPTION_ANALYSIS_HERO_RESTORE_HANDLER){
-    window.removeEventListener('scroll',OPTION_ANALYSIS_HERO_RESTORE_HANDLER);
-    OPTION_ANALYSIS_HERO_RESTORE_HANDLER = null;
-  }
-  document.querySelector('#panel4 .result-hero')?.classList.add('option-analysis-unpinned');
-}
 function optionAnalysisStickyOffset(){
   const topbarBottom = document.querySelector('.topbar')?.getBoundingClientRect().bottom || 0;
   const stepsBottom = document.querySelector('.steps-wrap')?.getBoundingClientRect().bottom || 0;
-  return Math.ceil(Math.max(topbarBottom,stepsBottom)) + 12;
-}
-function armOptionAnalysisHeroRestore(card){
-  if(!card) return;
-  const restoreAboveY = card.offsetTop - 220;
-  OPTION_ANALYSIS_HERO_RESTORE_HANDLER = ()=>{
-    if((window.scrollY || document.documentElement.scrollTop || 0) >= restoreAboveY) return;
-    document.querySelector('#panel4 .result-hero')?.classList.remove('option-analysis-unpinned');
-    window.removeEventListener('scroll',OPTION_ANALYSIS_HERO_RESTORE_HANDLER);
-    OPTION_ANALYSIS_HERO_RESTORE_HANDLER = null;
-  };
-  window.addEventListener('scroll',OPTION_ANALYSIS_HERO_RESTORE_HANDLER,{passive:true});
+  const heroBottom = document.querySelector('#panel4 .result-hero')?.getBoundingClientRect().bottom || 0;
+  return Math.ceil(Math.max(topbarBottom,stepsBottom,heroBottom)) + 12;
 }
 function scrollToOptionAnalysis(){
   const card = document.getElementById('optionAnalysisCard');
   if(!card) return;
-  releaseResultHeroForOptionAnalysis();
   requestAnimationFrame(()=>{
-    smoothScrollToElement(card,'start',650,()=>armOptionAnalysisHeroRestore(card),optionAnalysisStickyOffset());
+    smoothScrollToElement(card,'start',650,null,optionAnalysisStickyOffset());
   });
 }
 function applyPinnedOptionAnalysis(scrollToMatch=false){
@@ -19707,7 +19687,13 @@ function pinOptionAnalysisFromDetail(event,categoryKey,itemName){
 // item: clicking a category bar in "카테고리별 옵션비교" jumps to the matching tab in "카테고리별 상세옵션"
 // item: clicking a category card in "옵션구성 분석결과" keeps its color and tones down the other 7, then jumps to the matching tab
 function highlightCatCard(key){
+  const analysisCard = document.getElementById('optionAnalysisCard');
+  const previousTop = analysisCard?.getBoundingClientRect().top;
   selectOptionCategory(key);
+  if(analysisCard && Number.isFinite(previousTop)){
+    const layoutShift = analysisCard.getBoundingClientRect().top - previousTop;
+    if(Math.abs(layoutShift) > 0.5) window.scrollBy(0,layoutShift);
+  }
 }
 function jumpToCategory(category){
   const tabs = document.getElementById('catTabs');
