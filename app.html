@@ -1047,6 +1047,27 @@ body.es90-video-modal-open{overflow:hidden!important;}
 .es90-charging-video-close{position:absolute;z-index:3;right:12px;top:12px;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.4);border-radius:50%;background:rgba(3,17,28,.74);color:#fff;font-size:25px;font-weight:300;line-height:1;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 .es90-charging-video-close:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
 body.es90-charging-video-modal-open{overflow:hidden!important;}
+.es90-trunk-with-film{display:inline-flex;align-items:center;gap:8px;max-width:100%;}
+.es90-trunk-inline{position:relative;display:inline-grid;place-items:center;flex:0 0 auto;width:46px;aspect-ratio:16/9;padding:0;overflow:hidden;border:1px solid #b9cbd7;border-radius:4px;background:#071b2c;box-shadow:0 2px 6px rgba(7,27,44,.16);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.es90-trunk-inline:focus-visible{outline:2px solid var(--orange);outline-offset:2px;}
+.es90-trunk-inline video{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
+.es90-trunk-inline:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 42%,rgba(3,17,28,.42));pointer-events:none;}
+.es90-trunk-inline-play{position:absolute;z-index:1;display:grid;place-items:center;width:14px;height:14px;border:1px solid rgba(255,255,255,.78);border-radius:50%;background:rgba(7,27,44,.64);pointer-events:none;}
+.es90-trunk-inline-play svg{width:6px;height:6px;margin-left:1px;fill:#fff;}
+.es90-trunk-video-modal{position:fixed;z-index:5200;inset:0;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(1,8,14,.94);opacity:0;transition:opacity .18s ease;}
+.es90-trunk-video-modal[hidden]{display:none!important;}
+.es90-trunk-video-modal.is-open{opacity:1;}
+.es90-trunk-video-dialog{position:relative;width:min(calc(100vw - 32px),170dvh);max-height:calc(100dvh - 32px);overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:16px;background:#000;box-shadow:0 24px 70px rgba(0,0,0,.5);}
+.es90-trunk-video-full{display:block;width:100%;max-height:calc(100dvh - 32px);aspect-ratio:16/9;object-fit:contain;background:#000;}
+.es90-trunk-video-full::-webkit-media-controls{display:none!important;}
+.es90-trunk-video-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,17,28,.06) 36%,rgba(4,17,28,.76) 100%);pointer-events:none;}
+.es90-trunk-video-badge{position:absolute;left:20px;top:18px;padding:5px 11px;border:1px solid rgba(255,255,255,.46);border-radius:999px;background:rgba(7,27,44,.58);color:#fff;font-size:10px;font-weight:750;letter-spacing:.8px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none;}
+.es90-trunk-video-copy{position:absolute;left:22px;right:76px;bottom:16px;color:#fff;pointer-events:none;text-shadow:0 2px 9px rgba(0,0,0,.5);}
+.es90-trunk-video-copy strong{display:block;font-size:clamp(16px,2vw,25px);font-weight:750;letter-spacing:-.2px;}
+.es90-trunk-video-copy ul{display:flex;flex-direction:column;gap:1px;margin:5px 0 0;padding:0;list-style:none;color:rgba(255,255,255,.88);font-size:clamp(10px,1vw,13px);font-weight:500;line-height:1.35;}
+.es90-trunk-video-close{position:absolute;z-index:3;right:12px;top:12px;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.4);border-radius:50%;background:rgba(3,17,28,.74);color:#fff;font-size:25px;font-weight:300;line-height:1;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.es90-trunk-video-close:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+body.es90-trunk-video-modal-open{overflow:hidden!important;}
 
 @media screen and (max-width:767px){
   .trim-split-wrap{grid-template-columns:1fr;}
@@ -1063,6 +1084,11 @@ body.es90-charging-video-modal-open{overflow:hidden!important;}
   .es90-charging-video-dialog{width:100vw;max-height:100dvh;border:0;border-radius:0;}
   .es90-charging-video-full{max-height:100dvh;}
   .es90-charging-video-copy{left:16px;right:62px;bottom:16px;}
+  .es90-trunk-inline{width:40px;}
+  .es90-trunk-video-modal{padding:0;background:#000;}
+  .es90-trunk-video-dialog{width:100vw;max-height:100dvh;border:0;border-radius:0;}
+  .es90-trunk-video-full{max-height:100dvh;}
+  .es90-trunk-video-copy{left:16px;right:62px;bottom:16px;}
 }
 </style>
 <style id="es90-modern-dashboard-v3">
@@ -18258,6 +18284,72 @@ function es90ChargingInlineMarkup(){
   </button>`;
 }
 
+function ensureEs90TrunkVideoModal(){
+  let modal = document.getElementById('es90TrunkVideoModal');
+  if(modal) return modal;
+  modal = document.createElement('div');
+  modal.className = 'es90-trunk-video-modal';
+  modal.id = 'es90TrunkVideoModal';
+  modal.hidden = true;
+  modal.setAttribute('role','dialog');
+  modal.setAttribute('aria-modal','true');
+  modal.setAttribute('aria-label','ES90 트렁크 로딩 영상 전체 재생');
+  modal.innerHTML = `
+    <div class="es90-trunk-video-dialog">
+      <button class="es90-trunk-video-close" type="button" aria-label="영상 닫기">&times;</button>
+      <video class="es90-trunk-video-full" loop playsinline webkit-playsinline preload="metadata" poster="./assets/media/es90-trunk-poster.jpg" disablepictureinpicture controlslist="nodownload">
+        <source src="./assets/media/es90-trunk-full.mp4" type="video/mp4">
+      </video>
+      <span class="es90-trunk-video-shade" aria-hidden="true"></span>
+      <span class="es90-trunk-video-badge">ES90 Trunk Loading Film</span>
+      <div class="es90-trunk-video-copy">
+        <strong>적재 물건</strong>
+        <ul aria-label="트렁크 적재 물건 목록">
+          <li>26인치 1개</li>
+          <li>24인치 2개</li>
+          <li>20인치 1개</li>
+          <li>골프캐리어 1개</li>
+          <li>보스톤백 1개</li>
+          <li>토트백 1개</li>
+        </ul>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  const video = modal.querySelector('.es90-trunk-video-full');
+  video.controls = false;
+  video.removeAttribute('controls');
+  const closeModal = ()=>{
+    video.pause();
+    video.currentTime = 0;
+    modal.classList.remove('is-open');
+    modal.hidden = true;
+    document.body.classList.remove('es90-trunk-video-modal-open');
+    document.querySelectorAll('.es90-trunk-preview').forEach(preview=>preview.play().catch(()=>{}));
+  };
+  modal.querySelector('.es90-trunk-video-close').addEventListener('click',closeModal);
+  modal.addEventListener('click',event=>{ if(event.target===modal) closeModal(); });
+  document.addEventListener('keydown',event=>{ if(event.key==='Escape' && !modal.hidden) closeModal(); });
+  return modal;
+}
+
+function openEs90TrunkVideo(){
+  const modal = ensureEs90TrunkVideoModal();
+  const video = modal.querySelector('.es90-trunk-video-full');
+  document.querySelectorAll('.es90-trunk-preview').forEach(preview=>preview.pause());
+  modal.hidden = false;
+  document.body.classList.add('es90-trunk-video-modal-open');
+  requestAnimationFrame(()=>modal.classList.add('is-open'));
+  video.currentTime = 0;
+  video.play().catch(()=>{});
+}
+
+function es90TrunkInlineMarkup(){
+  return `<button class="es90-trunk-inline" type="button" aria-label="ES90 트렁크 로딩 영상 크게 보기" onclick="event.stopPropagation();openEs90TrunkVideo()">
+    <video class="es90-trunk-preview" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-trunk-poster.jpg" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-trunk-preview.mp4" type="video/mp4"></video>
+    <span class="es90-trunk-inline-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.6v12.8L18 12 8 5.6Z"/></svg></span>
+  </button>`;
+}
+
 function es90DriveMediaMarkup(){
   return `
     <div class="es90-drive-media">
@@ -19047,7 +19139,7 @@ function renderSpecCompare(esSpec, compSpec, compName, es90Trim, compTrim, brand
   };
 
   // item 2: ES90 트렁크는 고정 표기 (409~1,445L, 2열 폴딩 시)
-  const trunkEs = '409 - 1,445 L (2열 폴딩 시)';
+  const trunkEs = `<span class="es90-trunk-with-film"><span style="color:var(--ink);white-space:nowrap;">409 - 1,445 L (2열 폴딩 시)</span>${es90TrunkInlineMarkup()}</span>`;
   const rawCompTrunkFull = compSpec ? String(compSpec.trunk_l||'') : '';
   // item: BMW처럼 "확인불가" 표기가 포함된 값은 숫자만 뽑아 "(폴딩 용량 확인 불가)"로 별도 표기
   const trunkUnknown = /확인\s*불가/.test(rawCompTrunkFull);
