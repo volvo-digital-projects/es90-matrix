@@ -1069,7 +1069,7 @@ body.es90-charging-video-modal-open{overflow:hidden!important;}
 .es90-trunk-video-close:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
 body.es90-trunk-video-modal-open{overflow:hidden!important;}
 html.es90-video-safe-area,body.es90-video-safe-area{background:#000!important;color-scheme:dark;}
-body.es90-video-safe-area::after{content:"";position:fixed;z-index:5301;left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom,0px));height:calc(env(safe-area-inset-bottom,0px) + 2px);background:#000;pointer-events:none;}
+body.es90-ipad-video-safe-area::after{content:"";position:fixed;z-index:2147483647;left:0;right:0;bottom:0;height:max(env(safe-area-inset-bottom,0px),24px);background:#000;pointer-events:none;}
 
 @media screen and (max-width:767px){
   .trim-split-wrap{grid-template-columns:1fr;}
@@ -18182,15 +18182,18 @@ function reservationPercent(count,total){
 }
 
 const ES90_APP_THEME_COLOR = document.querySelector('meta[name="theme-color"]')?.content || '#1c3d5a';
+const ES90_IS_IPAD = /iPad/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 function setEs90VideoSafeArea(open){
   const isOpen = open === true;
   document.documentElement.classList.toggle('es90-video-safe-area',isOpen);
   document.body.classList.toggle('es90-video-safe-area',isOpen);
+  document.documentElement.classList.toggle('es90-ipad-video-safe-area',isOpen && ES90_IS_IPAD);
+  document.body.classList.toggle('es90-ipad-video-safe-area',isOpen && ES90_IS_IPAD);
   const themeColorMeta = document.querySelector('meta[name="theme-color"]');
   if(themeColorMeta) themeColorMeta.content = isOpen ? '#000000' : ES90_APP_THEME_COLOR;
   try{
     if(window.parent && window.parent !== window){
-      window.parent.postMessage({type:'es90-video-modal-state',open:isOpen},window.location.origin);
+      window.parent.postMessage({type:'es90-video-modal-state',open:isOpen,ipad:ES90_IS_IPAD},window.location.origin);
     }
   }catch(_){ }
 }
