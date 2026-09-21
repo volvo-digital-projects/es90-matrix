@@ -419,11 +419,18 @@ button{font-family:inherit;}
 .bnw-pdf-thumb-link:hover,.bnw-pdf-thumb-link:focus-visible{z-index:1;outline:0;border-color:var(--navy-soft);box-shadow:0 2px 7px rgba(22,48,70,.25);transform:translateY(-1px) scale(1.04);}
 .bnw-pdf-thumb-link:after{content:'PDF';position:absolute;right:1px;bottom:1px;padding:1px 2px;border-radius:2px;background:rgba(255,255,255,.92);color:#a0392b;font-size:5px;font-weight:800;line-height:1;letter-spacing:.2px;}
 .bnw-pdf-thumb{display:block;width:100%;height:100%;object-fit:cover;}
+.es90-digital-key-film-inline{position:relative;display:inline-grid;place-items:center;width:44px;aspect-ratio:16/9;flex:0 0 44px;padding:0;overflow:hidden;border:1px solid rgba(22,48,70,.26);border-radius:4px;background:#071b2c;box-shadow:0 1px 3px rgba(22,48,70,.16);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;-webkit-tap-highlight-color:transparent;}
+.es90-digital-key-film-inline:hover,.es90-digital-key-film-inline:focus-visible{z-index:1;outline:0;border-color:var(--navy-soft);box-shadow:0 2px 7px rgba(22,48,70,.25);transform:translateY(-1px) scale(1.04);}
+.es90-digital-key-film-inline video{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;}
+.es90-digital-key-film-inline:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 42%,rgba(3,17,28,.42));pointer-events:none;}
+.es90-digital-key-film-play{position:absolute;z-index:1;display:grid;place-items:center;width:14px;height:14px;border:1px solid rgba(255,255,255,.78);border-radius:50%;background:rgba(7,27,44,.64);pointer-events:none;}
+.es90-digital-key-film-play svg{width:6px;height:6px;margin-left:1px;fill:#fff;}
 @media(max-width:820px){
   .option-name-with-dolby{gap:4px;}
   .option-name-with-dolby-media{gap:3px;}
   .dolby-atmos-logo{width:42px;height:18px;flex-basis:42px;}
   .bnw-pdf-thumb-link{width:38px;height:22px;flex-basis:38px;}
+  .es90-digital-key-film-inline{width:38px;flex-basis:38px;}
 }
 .option-jump-highlight{animation:optionJumpHighlight 1.5s ease;}
 @keyframes optionJumpHighlight{0%,100%{box-shadow:none}20%,75%{box-shadow:0 0 0 3px rgba(245,91,31,.45)}}
@@ -1064,12 +1071,25 @@ body.es90-charging-video-modal-open{overflow:hidden!important;}
 .es90-trunk-video-badge{position:absolute;left:20px;top:18px;padding:5px 11px;border:1px solid rgba(255,255,255,.46);border-radius:999px;background:rgba(7,27,44,.58);color:#fff;font-size:10px;font-weight:750;letter-spacing:.8px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none;}
 .es90-trunk-video-copy{position:absolute;left:22px;right:76px;bottom:16px;color:#fff;pointer-events:none;text-shadow:0 2px 9px rgba(0,0,0,.5);}
 .es90-trunk-video-copy strong{display:block;font-size:clamp(16px,2vw,25px);font-weight:750;letter-spacing:-.2px;}
-.es90-trunk-video-copy ul{display:flex;flex-direction:column;gap:1px;margin:5px 0 0;padding:0;list-style:none;color:rgba(255,255,255,.88);font-size:clamp(10px,1vw,13px);font-weight:500;line-height:1.35;}
+.es90-trunk-video-copy ul{display:flex;flex-direction:column;gap:1px;margin:5px 0 0 10px;padding:0;list-style:none;color:rgba(255,255,255,.88);font-size:clamp(10px,1vw,13px);font-weight:500;line-height:1.35;}
+.es90-trunk-video-copy li{display:flex;align-items:baseline;gap:5px;}
+.es90-trunk-video-copy li::before{content:"-";flex:0 0 auto;color:inherit;font-weight:600;}
 .es90-trunk-video-close{position:absolute;z-index:3;right:12px;top:12px;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.4);border-radius:50%;background:rgba(3,17,28,.74);color:#fff;font-size:25px;font-weight:300;line-height:1;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 .es90-trunk-video-close:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
 body.es90-trunk-video-modal-open{overflow:hidden!important;}
 html.es90-video-safe-area,body.es90-video-safe-area{background:#000!important;color-scheme:dark;}
-body.es90-ipad-video-safe-area::after{content:"";position:fixed;z-index:2147483647;left:0;right:0;bottom:0;height:max(env(safe-area-inset-bottom,0px),24px);background:#000;pointer-events:none;}
+.es90-video-safe-area-guard{display:none;position:fixed;z-index:2147483647;left:0;right:0;bottom:0;height:var(--es90-video-safe-area-height,0px);background:#000;pointer-events:none;transform:translateZ(0);}
+html.es90-video-safe-area .es90-video-safe-area-guard{display:block;}
+.es90-digital-key-video-modal{position:fixed;z-index:5300;inset:0;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(1,8,14,.94);opacity:0;transition:opacity .18s ease;}
+.es90-digital-key-video-modal[hidden]{display:none!important;}
+.es90-digital-key-video-modal.is-open{opacity:1;}
+.es90-digital-key-video-dialog{position:relative;width:min(calc(100vw - 32px),170dvh);max-height:calc(100dvh - 32px);overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:16px;background:#000;box-shadow:0 24px 70px rgba(0,0,0,.5);}
+.es90-digital-key-video-full{display:block;width:100%;max-height:calc(100dvh - 32px);aspect-ratio:16/9;object-fit:contain;background:#000;}
+.es90-digital-key-video-full::-webkit-media-controls{display:none!important;}
+.es90-digital-key-video-badge{position:absolute;left:20px;top:18px;padding:5px 11px;border:1px solid rgba(255,255,255,.46);border-radius:999px;background:rgba(7,27,44,.58);color:#fff;font-size:10px;font-weight:750;letter-spacing:.8px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none;}
+.es90-digital-key-video-close{position:absolute;z-index:3;right:12px;top:12px;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.4);border-radius:50%;background:rgba(3,17,28,.74);color:#fff;font-size:25px;font-weight:300;line-height:1;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.es90-digital-key-video-close:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+body.es90-digital-key-video-modal-open{overflow:hidden!important;}
 
 @media screen and (max-width:767px){
   .trim-split-wrap{grid-template-columns:1fr;}
@@ -1091,6 +1111,9 @@ body.es90-ipad-video-safe-area::after{content:"";position:fixed;z-index:21474836
   .es90-trunk-video-dialog{width:100vw;max-height:100dvh;border:0;border-radius:0;}
   .es90-trunk-video-full{max-height:100dvh;}
   .es90-trunk-video-copy{left:16px;right:62px;bottom:16px;}
+  .es90-digital-key-video-modal{padding:0;background:#000;}
+  .es90-digital-key-video-dialog{width:100vw;max-height:100dvh;border:0;border-radius:0;}
+  .es90-digital-key-video-full{max-height:100dvh;}
 }
 </style>
 <style id="es90-modern-dashboard-v3">
@@ -18183,8 +18206,29 @@ function reservationPercent(count,total){
 
 const ES90_APP_THEME_COLOR = document.querySelector('meta[name="theme-color"]')?.content || '#1c3d5a';
 const ES90_IS_IPAD = /iPad/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function getEs90VideoSafeAreaHeight(){
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px)';
+  document.body.appendChild(probe);
+  const cssInset = Number.parseFloat(getComputedStyle(probe).paddingBottom) || 0;
+  probe.remove();
+  const viewportGap = window.visualViewport
+    ? Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop)
+    : 0;
+  return Math.ceil(Math.max(cssInset, viewportGap, ES90_IS_IPAD ? 34 : 0));
+}
 function setEs90VideoSafeArea(open){
   const isOpen = open === true;
+  let guard = document.getElementById('es90VideoSafeAreaGuard');
+  if(!guard){
+    guard = document.createElement('div');
+    guard.id = 'es90VideoSafeAreaGuard';
+    guard.className = 'es90-video-safe-area-guard';
+    guard.setAttribute('aria-hidden','true');
+    document.body.appendChild(guard);
+  }
+  const safeAreaHeight = isOpen ? getEs90VideoSafeAreaHeight() : 0;
+  document.documentElement.style.setProperty('--es90-video-safe-area-height',`${safeAreaHeight}px`);
   document.documentElement.classList.toggle('es90-video-safe-area',isOpen);
   document.body.classList.toggle('es90-video-safe-area',isOpen);
   document.documentElement.classList.toggle('es90-ipad-video-safe-area',isOpen && ES90_IS_IPAD);
@@ -18193,7 +18237,7 @@ function setEs90VideoSafeArea(open){
   if(themeColorMeta) themeColorMeta.content = isOpen ? '#000000' : ES90_APP_THEME_COLOR;
   try{
     if(window.parent && window.parent !== window){
-      window.parent.postMessage({type:'es90-video-modal-state',open:isOpen,ipad:ES90_IS_IPAD},window.location.origin);
+      window.parent.postMessage({type:'es90-video-modal-state',open:isOpen,ipad:ES90_IS_IPAD,safeAreaBottom:safeAreaHeight},window.location.origin);
     }
   }catch(_){ }
 }
@@ -18212,7 +18256,7 @@ function ensureEs90DriveVideoModal(){
   modal.innerHTML = `
     <div class="es90-video-dialog">
       <button class="es90-video-close" type="button" aria-label="영상 닫기">&times;</button>
-      <video class="es90-video-full" playsinline webkit-playsinline preload="metadata" poster="./assets/media/es90-driving-poster.jpg" disablepictureinpicture controlslist="nodownload">
+      <video class="es90-video-full" loop playsinline webkit-playsinline preload="metadata" poster="./assets/media/es90-driving-poster.jpg" disablepictureinpicture controlslist="nodownload">
         <source src="./assets/media/es90-driving-full.mp4" type="video/mp4">
       </video>
     </div>`;
@@ -18373,6 +18417,62 @@ function es90TrunkInlineMarkup(){
   return `<button class="es90-trunk-inline" type="button" aria-label="ES90 트렁크 로딩 영상 크게 보기" onclick="event.stopPropagation();openEs90TrunkVideo()">
     <video class="es90-trunk-preview" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-trunk-poster.jpg" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-trunk-preview.mp4" type="video/mp4"></video>
     <span class="es90-trunk-inline-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.6v12.8L18 12 8 5.6Z"/></svg></span>
+  </button>`;
+}
+
+function ensureEs90DigitalKeyVideoModal(){
+  let modal = document.getElementById('es90DigitalKeyVideoModal');
+  if(modal) return modal;
+  modal = document.createElement('div');
+  modal.className = 'es90-digital-key-video-modal';
+  modal.id = 'es90DigitalKeyVideoModal';
+  modal.hidden = true;
+  modal.setAttribute('role','dialog');
+  modal.setAttribute('aria-modal','true');
+  modal.setAttribute('aria-label','ES90 디지털 키 플러스 영상 전체 재생');
+  modal.innerHTML = `
+    <div class="es90-digital-key-video-dialog">
+      <button class="es90-digital-key-video-close" type="button" aria-label="영상 닫기">&times;</button>
+      <video class="es90-digital-key-video-full" loop playsinline webkit-playsinline preload="metadata" poster="./assets/media/es90-digital-key-plus-poster.jpg" disablepictureinpicture controlslist="nodownload">
+        <source src="./assets/media/es90-digital-key-plus-full.mp4" type="video/mp4">
+      </video>
+      <span class="es90-digital-key-video-badge">DIGITAL KEY PLUS FILM</span>
+    </div>`;
+  document.body.appendChild(modal);
+  const video = modal.querySelector('.es90-digital-key-video-full');
+  video.controls = false;
+  video.removeAttribute('controls');
+  const closeModal = ()=>{
+    video.pause();
+    video.currentTime = 0;
+    modal.classList.remove('is-open');
+    modal.hidden = true;
+    document.body.classList.remove('es90-digital-key-video-modal-open');
+    setEs90VideoSafeArea(false);
+    document.querySelectorAll('.es90-digital-key-preview').forEach(preview=>preview.play().catch(()=>{}));
+  };
+  modal.querySelector('.es90-digital-key-video-close').addEventListener('click',closeModal);
+  modal.addEventListener('click',event=>{ if(event.target===modal) closeModal(); });
+  document.addEventListener('keydown',event=>{ if(event.key==='Escape' && !modal.hidden) closeModal(); });
+  return modal;
+}
+
+function openEs90DigitalKeyVideo(){
+  const modal = ensureEs90DigitalKeyVideoModal();
+  const video = modal.querySelector('.es90-digital-key-video-full');
+  document.querySelectorAll('.es90-digital-key-preview').forEach(preview=>preview.pause());
+  modal.hidden = false;
+  document.body.classList.add('es90-digital-key-video-modal-open');
+  setEs90VideoSafeArea(true);
+  requestAnimationFrame(()=>modal.classList.add('is-open'));
+  video.currentTime = 0;
+  video.play().catch(()=>{});
+}
+
+function es90DigitalKeyFilmInlineMarkup(){
+  return `<button class="es90-digital-key-film-inline" type="button" aria-label="ES90 디지털 키 플러스 영상 크게 보기" onclick="event.stopPropagation();openEs90DigitalKeyVideo()">
+    <video class="es90-digital-key-preview" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-digital-key-plus-poster.jpg" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-digital-key-plus-preview.mp4" type="video/mp4"></video>
+    <span class="es90-digital-key-film-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.6v12.8L18 12 8 5.6Z"/></svg></span>
   </button>`;
 }
 
@@ -19686,7 +19786,7 @@ function renderOptTable(cat){
         const displayName = showDolbyAtmosLogo
           ? `<span class="option-name-with-dolby"><span class="option-name-with-dolby-text">${displayNameText}</span><span class="option-name-with-dolby-media"><span class="dolby-atmos-logo" role="img" aria-label="Dolby Atmos"></span><a class="bnw-pdf-thumb-link" href="/es90-matrix/pdf-viewer.html?v=20260805-218" title="ES90 Bowers & Wilkins + Dolby Atmos 가이드 PDF 열기" aria-label="ES90 Bowers & Wilkins + Dolby Atmos 가이드 PDF 열기" onclick="prepareBnwPdfViewer(event)"><img class="bnw-pdf-thumb" src="./assets/es90-bnw-dolby-atmos-thumb.png?v=20260805-v3" alt="ES90 Bowers & Wilkins + Dolby Atmos 가이드 PDF 표지" loading="lazy" draggable="false"></a></span></span>`
           : showDigitalKeyPdf
-            ? `<span class="option-name-with-dolby"><span class="option-name-with-dolby-text">${displayNameText}</span><span class="option-name-with-dolby-media"><a class="bnw-pdf-thumb-link" href="/es90-matrix/digital-key-pdf-viewer.html?v=20260813-2" title="ES90 디지털 키 플러스 가이드 PDF 열기" aria-label="ES90 디지털 키 플러스 가이드 PDF 열기" onclick="prepareBnwPdfViewer(event)"><img class="bnw-pdf-thumb" src="./assets/es90-digital-key-plus-thumb.png?v=20260813-v2" alt="ES90 디지털 키 플러스 가이드 PDF 표지" loading="lazy" draggable="false"></a></span></span>`
+            ? `<span class="option-name-with-dolby"><span class="option-name-with-dolby-text">${displayNameText}</span><span class="option-name-with-dolby-media"><a class="bnw-pdf-thumb-link" href="/es90-matrix/digital-key-pdf-viewer.html?v=20260813-2" title="ES90 디지털 키 플러스 가이드 PDF 열기" aria-label="ES90 디지털 키 플러스 가이드 PDF 열기" onclick="prepareBnwPdfViewer(event)"><img class="bnw-pdf-thumb" src="./assets/es90-digital-key-plus-thumb.png?v=20260813-v2" alt="ES90 디지털 키 플러스 가이드 PDF 표지" loading="lazy" draggable="false"></a>${es90DigitalKeyFilmInlineMarkup()}</span></span>`
             : displayNameText;
         const isSound = SOUND_ITEMS.includes(it.name.trim());
         const isDisplay = DISPLAY_ITEMS.includes(it.name.trim());

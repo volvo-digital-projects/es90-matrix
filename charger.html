@@ -41,7 +41,8 @@ footer{display:flex;justify-content:space-between;gap:16px;margin-top:15px;paddi
 }
 .legend{bottom:5px}
 html.es90-video-safe-area,body.es90-video-safe-area{background:#000!important;color-scheme:dark}
-body.es90-ipad-video-safe-area::after{content:"";position:fixed;z-index:2147483647;left:0;right:0;bottom:0;height:max(env(safe-area-inset-bottom,0px),24px);background:#000;pointer-events:none}
+.es90-video-safe-area-guard{display:none;position:fixed;z-index:2147483647;left:0;right:0;bottom:0;height:var(--es90-video-safe-area-height,0px);background:#000;pointer-events:none;transform:translateZ(0)}
+html.es90-video-safe-area .es90-video-safe-area-guard{display:block}
 </style>
 </head>
 <body>
@@ -75,15 +76,28 @@ body.es90-ipad-video-safe-area::after{content:"";position:fixed;z-index:21474836
 <script>
 const ES90_CHARGER_THEME_COLOR=document.querySelector('meta[name="theme-color"]')?.content||'#071b2c';
 const ES90_IS_IPAD=/iPad/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function getEs90VideoSafeAreaHeight(){
+  const probe=document.createElement('div');
+  probe.style.cssText='position:fixed;visibility:hidden;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px)';
+  document.body.appendChild(probe);
+  const cssInset=Number.parseFloat(getComputedStyle(probe).paddingBottom)||0;
+  probe.remove();
+  const viewportGap=window.visualViewport?Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop):0;
+  return Math.ceil(Math.max(cssInset,viewportGap,ES90_IS_IPAD?34:0));
+}
 function setEs90VideoSafeArea(open){
   const isOpen=open===true;
+  let guard=document.getElementById('es90VideoSafeAreaGuard');
+  if(!guard){guard=document.createElement('div');guard.id='es90VideoSafeAreaGuard';guard.className='es90-video-safe-area-guard';guard.setAttribute('aria-hidden','true');document.body.appendChild(guard)}
+  const safeAreaHeight=isOpen?getEs90VideoSafeAreaHeight():0;
+  document.documentElement.style.setProperty('--es90-video-safe-area-height',`${safeAreaHeight}px`);
   document.documentElement.classList.toggle('es90-video-safe-area',isOpen);
   document.body.classList.toggle('es90-video-safe-area',isOpen);
   document.documentElement.classList.toggle('es90-ipad-video-safe-area',isOpen&&ES90_IS_IPAD);
   document.body.classList.toggle('es90-ipad-video-safe-area',isOpen&&ES90_IS_IPAD);
   const themeColorMeta=document.querySelector('meta[name="theme-color"]');
   if(themeColorMeta)themeColorMeta.content=isOpen?'#000000':ES90_CHARGER_THEME_COLOR;
-  try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:'es90-video-modal-state',open:isOpen,ipad:ES90_IS_IPAD},window.location.origin)}catch(_){ }
+  try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:'es90-video-modal-state',open:isOpen,ipad:ES90_IS_IPAD,safeAreaBottom:safeAreaHeight},window.location.origin)}catch(_){ }
 }
 window.addEventListener('pagehide',()=>setEs90VideoSafeArea(false));
 function ensureEs90ChargingVideoModal(){
