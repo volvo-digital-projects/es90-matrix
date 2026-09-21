@@ -1068,6 +1068,8 @@ body.es90-charging-video-modal-open{overflow:hidden!important;}
 .es90-trunk-video-close{position:absolute;z-index:3;right:12px;top:12px;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.4);border-radius:50%;background:rgba(3,17,28,.74);color:#fff;font-size:25px;font-weight:300;line-height:1;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 .es90-trunk-video-close:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
 body.es90-trunk-video-modal-open{overflow:hidden!important;}
+html.es90-video-safe-area,body.es90-video-safe-area{background:#000!important;color-scheme:dark;}
+body.es90-video-safe-area::after{content:"";position:fixed;z-index:5301;left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom,0px));height:calc(env(safe-area-inset-bottom,0px) + 2px);background:#000;pointer-events:none;}
 
 @media screen and (max-width:767px){
   .trim-split-wrap{grid-template-columns:1fr;}
@@ -18179,6 +18181,21 @@ function reservationPercent(count,total){
   return total>0 ? (Number(count)/total*100).toFixed(1) : '0.0';
 }
 
+const ES90_APP_THEME_COLOR = document.querySelector('meta[name="theme-color"]')?.content || '#1c3d5a';
+function setEs90VideoSafeArea(open){
+  const isOpen = open === true;
+  document.documentElement.classList.toggle('es90-video-safe-area',isOpen);
+  document.body.classList.toggle('es90-video-safe-area',isOpen);
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if(themeColorMeta) themeColorMeta.content = isOpen ? '#000000' : ES90_APP_THEME_COLOR;
+  try{
+    if(window.parent && window.parent !== window){
+      window.parent.postMessage({type:'es90-video-modal-state',open:isOpen},window.location.origin);
+    }
+  }catch(_){ }
+}
+window.addEventListener('pagehide',()=>setEs90VideoSafeArea(false));
+
 function ensureEs90DriveVideoModal(){
   let modal = document.getElementById('es90DriveVideoModal');
   if(modal) return modal;
@@ -18206,6 +18223,7 @@ function ensureEs90DriveVideoModal(){
     modal.classList.remove('is-open');
     modal.hidden = true;
     document.body.classList.remove('es90-video-modal-open');
+    setEs90VideoSafeArea(false);
     document.querySelector('.es90-drive-preview')?.play().catch(()=>{});
   };
   modal.querySelector('.es90-video-close').addEventListener('click',closeModal);
@@ -18223,6 +18241,7 @@ function openEs90DriveVideo(){
   document.querySelector('.es90-drive-preview')?.pause();
   modal.hidden = false;
   document.body.classList.add('es90-video-modal-open');
+  setEs90VideoSafeArea(true);
   requestAnimationFrame(()=>modal.classList.add('is-open'));
   video.currentTime = 0;
   video.play().catch(()=>{});
@@ -18258,6 +18277,7 @@ function ensureEs90ChargingVideoModal(){
     modal.classList.remove('is-open');
     modal.hidden = true;
     document.body.classList.remove('es90-charging-video-modal-open');
+    setEs90VideoSafeArea(false);
     document.querySelectorAll('.es90-charging-preview').forEach(preview=>preview.play().catch(()=>{}));
   };
   modal.querySelector('.es90-charging-video-close').addEventListener('click',closeModal);
@@ -18272,6 +18292,7 @@ function openEs90ChargingVideo(){
   document.querySelectorAll('.es90-charging-preview').forEach(preview=>preview.pause());
   modal.hidden = false;
   document.body.classList.add('es90-charging-video-modal-open');
+  setEs90VideoSafeArea(true);
   requestAnimationFrame(()=>modal.classList.add('is-open'));
   video.currentTime = 0;
   video.play().catch(()=>{});
@@ -18324,6 +18345,7 @@ function ensureEs90TrunkVideoModal(){
     modal.classList.remove('is-open');
     modal.hidden = true;
     document.body.classList.remove('es90-trunk-video-modal-open');
+    setEs90VideoSafeArea(false);
     document.querySelectorAll('.es90-trunk-preview').forEach(preview=>preview.play().catch(()=>{}));
   };
   modal.querySelector('.es90-trunk-video-close').addEventListener('click',closeModal);
@@ -18338,6 +18360,7 @@ function openEs90TrunkVideo(){
   document.querySelectorAll('.es90-trunk-preview').forEach(preview=>preview.pause());
   modal.hidden = false;
   document.body.classList.add('es90-trunk-video-modal-open');
+  setEs90VideoSafeArea(true);
   requestAnimationFrame(()=>modal.classList.add('is-open'));
   video.currentTime = 0;
   video.play().catch(()=>{});

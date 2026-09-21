@@ -40,6 +40,8 @@ footer{display:flex;justify-content:space-between;gap:16px;margin-top:15px;paddi
   .station-list-panel .list{height:auto;min-height:0;flex:1 1 auto;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 }
 .legend{bottom:5px}
+html.es90-video-safe-area,body.es90-video-safe-area{background:#000!important;color-scheme:dark}
+body.es90-video-safe-area::after{content:"";position:fixed;z-index:5201;left:0;right:0;bottom:calc(-1 * env(safe-area-inset-bottom,0px));height:calc(env(safe-area-inset-bottom,0px) + 2px);background:#000;pointer-events:none}
 </style>
 </head>
 <body>
@@ -71,6 +73,16 @@ footer{display:flex;justify-content:space-between;gap:16px;margin-top:15px;paddi
 <div class="toast" id="toast"></div>
 <script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=h0B5SsrrUz17nGaXEmvGZj9CN5eStv57lgU0QX7d"></script>
 <script>
+const ES90_CHARGER_THEME_COLOR=document.querySelector('meta[name="theme-color"]')?.content||'#071b2c';
+function setEs90VideoSafeArea(open){
+  const isOpen=open===true;
+  document.documentElement.classList.toggle('es90-video-safe-area',isOpen);
+  document.body.classList.toggle('es90-video-safe-area',isOpen);
+  const themeColorMeta=document.querySelector('meta[name="theme-color"]');
+  if(themeColorMeta)themeColorMeta.content=isOpen?'#000000':ES90_CHARGER_THEME_COLOR;
+  try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:'es90-video-modal-state',open:isOpen},window.location.origin)}catch(_){ }
+}
+window.addEventListener('pagehide',()=>setEs90VideoSafeArea(false));
 function ensureEs90ChargingVideoModal(){
   let modal=document.getElementById('es90ChargingVideoModal');
   if(modal)return modal;
@@ -86,13 +98,13 @@ function ensureEs90ChargingVideoModal(){
   const video=modal.querySelector('.es90-charging-video-full');
   video.controls=false;
   video.removeAttribute('controls');
-  const closeModal=()=>{video.pause();video.currentTime=0;modal.classList.remove('is-open');modal.hidden=true;document.body.classList.remove('es90-charging-video-modal-open');document.querySelectorAll('.es90-charging-preview').forEach(preview=>preview.play().catch(()=>{}))};
+  const closeModal=()=>{video.pause();video.currentTime=0;modal.classList.remove('is-open');modal.hidden=true;document.body.classList.remove('es90-charging-video-modal-open');setEs90VideoSafeArea(false);document.querySelectorAll('.es90-charging-preview').forEach(preview=>preview.play().catch(()=>{}))};
   modal.querySelector('.es90-charging-video-close').addEventListener('click',closeModal);
   modal.addEventListener('click',event=>{if(event.target===modal)closeModal()});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!modal.hidden)closeModal()});
   return modal;
 }
-function openEs90ChargingVideo(){const modal=ensureEs90ChargingVideoModal();const video=modal.querySelector('.es90-charging-video-full');document.querySelectorAll('.es90-charging-preview').forEach(preview=>preview.pause());modal.hidden=false;document.body.classList.add('es90-charging-video-modal-open');requestAnimationFrame(()=>modal.classList.add('is-open'));video.currentTime=0;video.play().catch(()=>{})}
+function openEs90ChargingVideo(){const modal=ensureEs90ChargingVideoModal();const video=modal.querySelector('.es90-charging-video-full');document.querySelectorAll('.es90-charging-preview').forEach(preview=>preview.pause());modal.hidden=false;document.body.classList.add('es90-charging-video-modal-open');setEs90VideoSafeArea(true);requestAnimationFrame(()=>modal.classList.add('is-open'));video.currentTime=0;video.play().catch(()=>{})}
 let regions={
 '서울특별시':['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'],
 '부산광역시':['강서구','금정구','기장군','남구','동구','동래구','부산진구','북구','사상구','사하구','서구','수영구','연제구','영도구','중구','해운대구'],
