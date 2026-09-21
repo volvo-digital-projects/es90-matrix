@@ -1446,7 +1446,7 @@ body:not(.cover-open){overflow-x:clip;overflow-y:visible;}
 .pkg-calc-vprice.es90-price,.pkg-calc-vprice.competitor-price{color:var(--orange-deep)!important;font-weight:800!important;}
 .pkg-calc-row span:last-child{color:var(--orange-deep)!important;font-weight:800!important;}
 .pkg-calc-total span:last-child{color:var(--orange-deep)!important;font-weight:800!important;}
-.footer-actions{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px!important;align-items:stretch;}
+.footer-actions{position:relative;z-index:10;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px!important;align-items:stretch;overflow:visible!important;}
 .footer-actions .btn-secondary{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;min-height:46px!important;padding:0 14px!important;text-align:center;line-height:1.25;}
 .footer-actions .btn-live-subsidy{position:relative;isolation:isolate;overflow:visible!important;display:inline-flex;align-items:center;justify-content:center;gap:7px;color:var(--navy)!important;padding-left:10px!important;padding-right:10px!important;}
 .footer-actions .btn-live-subsidy>.btn-live-subsidy-label{line-height:1.15;text-align:center;white-space:normal;}
@@ -1462,7 +1462,8 @@ body:not(.cover-open){overflow-x:clip;overflow-y:visible;}
 @keyframes subsidySupplementGlow{0%,18%,100%{opacity:.14;transform:scale(.94);}42%{opacity:.9;transform:scale(1.13);}62%{opacity:.28;transform:scale(1.02);}}
 @keyframes subsidySupplementShine{0%,20%{background-position:145% 0;opacity:0;}30%{opacity:1;}52%{background-position:-45% 0;opacity:1;}60%,100%{background-position:-45% 0;opacity:0;}}
 @media(prefers-reduced-motion:reduce){.subsidy-supplement-badge::before,.subsidy-supplement-badge::after{animation:none;}.subsidy-supplement-badge::before{opacity:.32;}}
-.footer-actions .btn-education-material{position:relative;isolation:isolate;overflow:visible!important;display:inline-flex;align-items:center;justify-content:center;}
+.footer-actions .btn-education-material{position:relative;z-index:2;isolation:isolate;overflow:visible!important;display:inline-flex;align-items:center;justify-content:center;}
+.footer-actions .btn-education-material>.education-material-badge{z-index:20;right:6px;}
 .education-material-badge{position:absolute;z-index:3;right:-5px;top:-10px;display:inline-flex;align-items:center;justify-content:center;gap:3px;min-height:19px;padding:2px 6px 2px 4px;border:1px solid rgba(255,255,255,.84);border-radius:999px;background:linear-gradient(135deg,#56b8ff 0%,#237ecb 52%,#115285 100%);box-shadow:0 2px 6px rgba(17,82,133,.3),inset 0 1px 0 rgba(255,255,255,.38);color:#fff;font-size:8px;font-weight:900;letter-spacing:-.02em;line-height:1;white-space:nowrap;pointer-events:none;}
 .tab-btn .education-material-badge{right:-4px;top:-10px;}
 .education-material-badge::before{content:"";position:absolute;z-index:-2;inset:-5px;border-radius:999px;background:radial-gradient(ellipse at center,rgba(70,175,255,.68) 0%,rgba(35,126,203,.3) 46%,rgba(17,82,133,0) 74%);opacity:.16;animation:educationMaterialGlow 2.8s ease-in-out infinite;pointer-events:none;}
