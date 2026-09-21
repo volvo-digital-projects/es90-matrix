@@ -18391,6 +18391,16 @@ function configureEs90VideoModal(modal,{videoSelector,closeSelector,bodyClass}){
     const reveal = ()=>{
       if(!modal.hidden && modal.classList.contains('is-open')) modal.classList.add('is-playing');
     };
+    if(modal._es90StartFromBeginning && video.currentTime>.25){
+      video.addEventListener('seeked',()=>{
+        modal._es90StartFromBeginning = false;
+        if(typeof video.requestVideoFrameCallback==='function') video.requestVideoFrameCallback(reveal);
+        else requestAnimationFrame(reveal);
+      },{once:true});
+      try{ video.currentTime = 0; }catch(_){ }
+      return;
+    }
+    modal._es90StartFromBeginning = false;
     if(typeof video.requestVideoFrameCallback==='function') video.requestVideoFrameCallback(reveal);
     else requestAnimationFrame(reveal);
   });
@@ -18423,7 +18433,12 @@ function openConfiguredEs90VideoModal(modal,{videoSelector,bodyClass}){
   clearTimeout(modal._es90CloseTimer);
   pauseEs90InlineVideoPreviews();
   video.pause();
-  try{ video.currentTime = 0; }catch(_){ }
+  modal._es90StartFromBeginning = true;
+  const resetToBeginning = ()=>{
+    try{ video.currentTime = 0; }catch(_){ }
+  };
+  if(video.readyState>=HTMLMediaElement.HAVE_METADATA) resetToBeginning();
+  else video.addEventListener('loadedmetadata',resetToBeginning,{once:true});
   modal.classList.remove('is-playing');
   modal.hidden = false;
   document.body.classList.add(bodyClass);
