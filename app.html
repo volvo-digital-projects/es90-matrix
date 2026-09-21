@@ -18433,13 +18433,15 @@ function ensureEs90DigitalKeyVideoModal(){
   modal.innerHTML = `
     <div class="es90-digital-key-video-dialog">
       <button class="es90-digital-key-video-close" type="button" aria-label="영상 닫기">&times;</button>
-      <video class="es90-digital-key-video-full" loop playsinline webkit-playsinline preload="metadata" poster="./assets/media/es90-digital-key-plus-poster.jpg" disablepictureinpicture controlslist="nodownload">
-        <source src="./assets/media/es90-digital-key-plus-full.mp4" type="video/mp4">
+      <video class="es90-digital-key-video-full" muted loop playsinline webkit-playsinline preload="metadata" poster="./assets/media/es90-digital-key-plus-poster.jpg?v=20260921-2" disablepictureinpicture controlslist="nodownload">
+        <source src="./assets/media/es90-digital-key-plus-full.mp4?v=20260921-2" type="video/mp4">
       </video>
       <span class="es90-digital-key-video-badge">DIGITAL KEY PLUS FILM</span>
     </div>`;
   document.body.appendChild(modal);
   const video = modal.querySelector('.es90-digital-key-video-full');
+  video.defaultMuted = true;
+  video.muted = true;
   video.controls = false;
   video.removeAttribute('controls');
   const closeModal = ()=>{
@@ -18471,7 +18473,7 @@ function openEs90DigitalKeyVideo(){
 
 function es90DigitalKeyFilmInlineMarkup(){
   return `<button class="es90-digital-key-film-inline" type="button" aria-label="ES90 디지털 키 플러스 영상 크게 보기" onclick="event.stopPropagation();openEs90DigitalKeyVideo()">
-    <video class="es90-digital-key-preview" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-digital-key-plus-poster.jpg" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-digital-key-plus-preview.mp4" type="video/mp4"></video>
+    <video class="es90-digital-key-preview" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="./assets/media/es90-digital-key-plus-poster.jpg?v=20260921-2" aria-hidden="true" tabindex="-1"><source src="./assets/media/es90-digital-key-plus-preview.mp4?v=20260921-2" type="video/mp4"></video>
     <span class="es90-digital-key-film-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.6v12.8L18 12 8 5.6Z"/></svg></span>
   </button>`;
 }
