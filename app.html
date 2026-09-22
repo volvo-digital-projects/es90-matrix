@@ -74,9 +74,11 @@ button{font-family:inherit;}
 .meta-pill b{color:#fff;font-weight:600;}
 .update-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;font-size:12px;padding:7px 14px;border-radius:20px;cursor:pointer;transition:background .15s;}
 .update-btn:hover{background:rgba(255,255,255,0.22);}
-.logout-btn{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border:1px solid rgba(255,255,255,.28);border-radius:20px;background:rgba(255,255,255,.08);color:#fff;font-size:11px;font-weight:650;cursor:pointer;transition:background .15s,border-color .15s;white-space:nowrap;}
-.logout-btn:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.48);}
-.logout-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.logout-btn{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border:1px solid rgba(255,255,255,.28);border-radius:20px;background:rgba(255,255,255,.08);color:#fff;font-size:11px;font-weight:650;cursor:pointer;transform-origin:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:border-color 90ms ease,color 90ms ease,background-color 90ms ease,box-shadow 90ms ease,transform 90ms ease;white-space:nowrap;}
+@media(hover:hover) and (pointer:fine){.logout-btn:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.48);}}
+.logout-btn:active{border-color:rgba(139,197,223,.78);color:#fff;background:rgba(54,142,184,.46);box-shadow:inset 0 0 0 1px rgba(194,225,238,.2),inset 0 4px 10px rgba(2,21,33,.2);transform:scale(.975);}
+.logout-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform 90ms ease;}
+.logout-btn:active svg{transform:scale(.9);}
 @media(max-width:640px){.topbar-inner{padding:0 8px}.meta-pill{display:none}.logout-btn{width:32px;padding:0;justify-content:center}.logout-btn span{display:none}}
 
 /* ===== Progress Steps ===== */
