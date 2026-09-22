@@ -18095,8 +18095,8 @@ function showPanel(n){
 }
 
 // STEP 3 keeps the outer app shell fixed, while wheel input scrolls the inner report document.
-// This fallback is needed for desktop browsers that do not reliably route wheel events through
-// the full-viewport iframe. Native scrolling inside modals or other scrollable controls is kept.
+// Move the five report sessions one at a time on desktop wheels and iPad swipes. Existing
+// in-page jumps (detail -> analysis, purchase -> detail, and so on) keep their own motion.
 function hasScrollableWheelAncestor(start, deltaY){
   for(let node=start instanceof Element ? start : null; node && node!==document.body; node=node.parentElement){
     const overflowY = getComputedStyle(node).overflowY;
@@ -18107,14 +18107,183 @@ function hasScrollableWheelAncestor(start, deltaY){
   }
   return false;
 }
-window.addEventListener('wheel', event=>{
+
+const STEP3_SCROLL_SECTION_IDS = [
+  'performanceCompareCard',
+  'categoryCompareCard',
+  'detailOptionsCard',
+  'optionAnalysisCard',
+  'optionPurchaseCard'
+];
+const STEP3_SECTION_SCROLL = {
+  raf:0,
+  animating:false,
+  wheelDelta:0,
+  wheelDirection:0,
+  wheelResetTimer:0,
+  wheelQuietUntil:0,
+  touchStartX:0,
+  touchStartY:0,
+  touchTracking:false,
+  touchTriggered:false
+};
+
+function isStep3SectionNavigationReady(){
   const resultPanel = document.getElementById('panel4');
-  if(STATE.step!==3 || !resultPanel?.classList.contains('show') || event.ctrlKey || !event.deltaY) return;
-  if(hasScrollableWheelAncestor(event.target,event.deltaY)) return;
-  event.preventDefault();
+  if(STATE.step!==3 || !resultPanel?.classList.contains('show')) return false;
+  if(!window.matchMedia('(min-width:768px)').matches || document.body.classList.contains('cover-open')) return false;
+  if(document.querySelector('.es90-video-modal.is-open,.es90-charging-video-modal.is-open,.es90-trunk-video-modal.is-open,.es90-digital-key-video-modal.is-open,.modal.show')) return false;
+  return !Array.from(document.body.classList).some(name=>name.endsWith('-modal-open'));
+}
+
+function getStep3ScrollSections(){
+  return STEP3_SCROLL_SECTION_IDS
+    .map(id=>document.getElementById(id))
+    .filter(section=>section && section.getClientRects().length);
+}
+
+function step3SectionStickyOffset(){
+  const topbarBottom = document.querySelector('.topbar')?.getBoundingClientRect().bottom || 0;
+  const stepsBottom = document.querySelector('.steps-wrap')?.getBoundingClientRect().bottom || 0;
+  const heroBottom = document.querySelector('#panel4 .result-hero')?.getBoundingClientRect().bottom || 0;
+  return Math.ceil(Math.max(topbarBottom,stepsBottom,heroBottom)) + 12;
+}
+
+function step3SectionPositions(sections){
+  const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+  const scrollRoot = document.scrollingElement || document.documentElement;
+  const maxY = Math.max(0,scrollRoot.scrollHeight-window.innerHeight);
+  const offset = step3SectionStickyOffset();
+  return sections.map(section=>Math.min(maxY,Math.max(0,currentY+section.getBoundingClientRect().top-offset)));
+}
+
+function easeStep3ScrollWithSoftLanding(progress){
+  const landingStart = 0.68;
+  const initialTravelRate = 1.18;
+  if(progress<=landingStart) return progress*initialTravelRate;
+  const landingProgress = (progress-landingStart)/(1-landingStart);
+  const landingStartPosition = landingStart*initialTravelRate;
+  const remainingDistance = 1-landingStartPosition;
+  const landingStartSlope = (initialTravelRate*(1-landingStart))/remainingDistance;
+  const easedLanding = (landingStartSlope-2)*landingProgress**3
+    + (3-2*landingStartSlope)*landingProgress**2
+    + landingStartSlope*landingProgress;
+  return landingStartPosition+remainingDistance*easedLanding;
+}
+
+function animateStep3SectionScroll(targetY){
+  const startY = window.scrollY || document.documentElement.scrollTop || 0;
+  const distance = targetY-startY;
+  if(Math.abs(distance)<1) return false;
+  if(STEP3_SECTION_SCROLL.raf) cancelAnimationFrame(STEP3_SECTION_SCROLL.raf);
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    window.scrollTo(0,targetY);
+    return true;
+  }
+  const duration = 380;
+  const startedAt = performance.now();
+  STEP3_SECTION_SCROLL.animating = true;
+  const animate = now=>{
+    const progress = Math.min((now-startedAt)/duration,1);
+    // Match the Data Dashboard navigator: quick initial travel, then a soft landing.
+    const eased = easeStep3ScrollWithSoftLanding(progress);
+    window.scrollTo(0,startY+distance*eased);
+    if(progress<1){
+      STEP3_SECTION_SCROLL.raf = requestAnimationFrame(animate);
+      return;
+    }
+    window.scrollTo(0,targetY);
+    STEP3_SECTION_SCROLL.raf = 0;
+    STEP3_SECTION_SCROLL.animating = false;
+    STEP3_SECTION_SCROLL.wheelQuietUntil = performance.now()+140;
+  };
+  STEP3_SECTION_SCROLL.raf = requestAnimationFrame(animate);
+  return true;
+}
+
+function moveStep3BySection(direction){
+  if(!isStep3SectionNavigationReady() || STEP3_SECTION_SCROLL.animating) return false;
+  const sections = getStep3ScrollSections();
+  if(!sections.length) return false;
+  const positions = step3SectionPositions(sections);
+  const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+  const tolerance = 18;
+  let targetIndex = -1;
+  if(direction>0){
+    targetIndex = positions.findIndex(position=>position>currentY+tolerance);
+  }else{
+    for(let index=positions.length-1; index>=0; index--){
+      if(positions[index]<currentY-tolerance){ targetIndex=index; break; }
+    }
+  }
+  if(targetIndex<0) return false;
+  return animateStep3SectionScroll(positions[targetIndex]);
+}
+
+function normalizeWheelDelta(event){
   const unit = event.deltaMode===1 ? 40 : (event.deltaMode===2 ? window.innerHeight : 1);
-  window.scrollBy({top:event.deltaY*unit,left:0,behavior:'auto'});
+  return event.deltaY*unit;
+}
+
+window.addEventListener('wheel', event=>{
+  if(!isStep3SectionNavigationReady() || event.ctrlKey || !event.deltaY) return;
+  if(hasScrollableWheelAncestor(event.target,event.deltaY)) return;
+  const now = performance.now();
+  if(STEP3_SECTION_SCROLL.animating || now<STEP3_SECTION_SCROLL.wheelQuietUntil){
+    event.preventDefault();
+    STEP3_SECTION_SCROLL.wheelQuietUntil = now+140;
+    return;
+  }
+  const delta = normalizeWheelDelta(event);
+  const direction = Math.sign(delta);
+  if(direction!==STEP3_SECTION_SCROLL.wheelDirection){
+    STEP3_SECTION_SCROLL.wheelDelta = 0;
+    STEP3_SECTION_SCROLL.wheelDirection = direction;
+  }
+  STEP3_SECTION_SCROLL.wheelDelta += delta;
+  clearTimeout(STEP3_SECTION_SCROLL.wheelResetTimer);
+  STEP3_SECTION_SCROLL.wheelResetTimer = setTimeout(()=>{
+    STEP3_SECTION_SCROLL.wheelDelta = 0;
+    STEP3_SECTION_SCROLL.wheelDirection = 0;
+  },180);
+  event.preventDefault();
+  const threshold = Math.min(56,Math.max(36,window.innerHeight*0.045));
+  if(Math.abs(STEP3_SECTION_SCROLL.wheelDelta)<threshold) return;
+  STEP3_SECTION_SCROLL.wheelDelta = 0;
+  moveStep3BySection(direction);
 },{passive:false});
+
+function isStep3TouchControl(target){
+  return target instanceof Element && !!target.closest('button,a,input,select,textarea,video,audio,[contenteditable="true"],[role="button"],[role="slider"],[role="listbox"]');
+}
+
+window.addEventListener('touchstart',event=>{
+  const touch = event.touches[0];
+  STEP3_SECTION_SCROLL.touchTracking = !!touch && event.touches.length===1 && isStep3SectionNavigationReady() && !isStep3TouchControl(event.target);
+  STEP3_SECTION_SCROLL.touchTriggered = false;
+  if(!STEP3_SECTION_SCROLL.touchTracking) return;
+  STEP3_SECTION_SCROLL.touchStartX = touch.clientX;
+  STEP3_SECTION_SCROLL.touchStartY = touch.clientY;
+},{passive:true});
+
+window.addEventListener('touchmove',event=>{
+  if(!STEP3_SECTION_SCROLL.touchTracking || STEP3_SECTION_SCROLL.touchTriggered || event.touches.length!==1) return;
+  const touch = event.touches[0];
+  const deltaX = STEP3_SECTION_SCROLL.touchStartX-touch.clientX;
+  const deltaY = STEP3_SECTION_SCROLL.touchStartY-touch.clientY;
+  if(Math.abs(deltaY)<Math.abs(deltaX)*1.15) return;
+  event.preventDefault();
+  if(Math.abs(deltaY)<38) return;
+  STEP3_SECTION_SCROLL.touchTriggered = true;
+  moveStep3BySection(Math.sign(deltaY));
+},{passive:false});
+
+function finishStep3TouchGesture(){
+  STEP3_SECTION_SCROLL.touchTracking = false;
+  STEP3_SECTION_SCROLL.touchTriggered = false;
+}
+window.addEventListener('touchend',finishStep3TouchGesture,{passive:true});
+window.addEventListener('touchcancel',finishStep3TouchGesture,{passive:true});
 
 // ---------------- STEP 1: ES90 trim ----------------
 // item: ES90 실시간 예약(잔여계약) 현황 — 대기고객의 선택 섹션에 쓰임. 추후 실데이터 연동 시 이 객체만 교체하면 됨.
