@@ -19254,14 +19254,15 @@ function buildPriceGapHtml(esTotal, compPrice, es90Trim, compName, fallbackLabel
   const gapLabel = esCheaper ? '가격 경쟁력 확보' : '가치 경쟁력 확보';
   const promotion = getCompetitorPromotion(compPrice);
   let promotionHtml = '';
-  if(promotion?.hasDiscount){
+  // 할인이 0원이어도 Getcha에서 가격을 확인한 트림은 출고가 기준의 업데이트 정보를 같이 노출한다.
+  if(promotion){
     const promoDiff = promotion.discountedPrice - esTotal;
     const promoPct = Math.abs(Math.round((promoDiff / promotion.discountedPrice) * 100));
     const promoLabel = promoDiff > 0 ? '가격 경쟁력 확보' : '가치 경쟁력 확보';
     const checkedAt = promotion.checkedAt || '';
     promotionHtml = `
       <div class="price-gap-promo">
-        <span class="price-gap-promo-source" title="Getcha 광고 확인일 ${checkedAt}">
+        <span class="price-gap-promo-source" title="Getcha 가격 확인일 ${checkedAt}">
           <span class="price-gap-promo-source-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke-width="1.8"/><path d="M12 7.5V12l3.2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <span class="price-gap-promo-source-brand">GETCHA</span><span class="price-gap-promo-source-label">UPDATE</span><span class="price-gap-promo-source-time">${checkedAt} 기준</span>
         </span>
