@@ -890,7 +890,7 @@ body.ipad-step3-scroll-limit .content{
   padding-bottom:0!important;
 }
 body.ipad-step3-scroll-limit #panel4.panel.show{
-  padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))!important;
+  padding-bottom:env(safe-area-inset-bottom, 0px)!important;
 }
 @media (display-mode: standalone) and (min-width:1024px) and (orientation:landscape) {
   html{min-height:100dvh;}
@@ -900,7 +900,13 @@ body.ipad-step3-scroll-limit #panel4.panel.show{
   body:not(.cover-open) .panel.show{padding-bottom:32px;}
   body.ipad-step3-scroll-limit:not(.cover-open) #app,
   body.ipad-step3-scroll-limit:not(.cover-open) .content{padding-bottom:0!important;}
-  body.ipad-step3-scroll-limit:not(.cover-open) #panel4.panel.show{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))!important;}
+  body.ipad-step3-scroll-limit:not(.cover-open) #panel4.panel.show{padding-bottom:env(safe-area-inset-bottom, 0px)!important;}
+}
+
+/* STEP 3 ends at its own footer instead of inheriting the app-wide scroll buffer. */
+body.step3-results-active #app,
+body.step3-results-active .content{
+  padding-bottom:0!important;
 }
 
 /* ===== Result hero keyword badges ===== */
@@ -1372,6 +1378,7 @@ body:not(.cover-open){overflow-x:clip;overflow-y:visible;}
     #panel4.panel-enter-forward,#panel4.panel-enter-back{animation:none!important;transform:none!important;opacity:1!important;}
     #panel4 .result-hero-slot{display:block;}
     #panel4 .result-hero.ipad-fixed{position:fixed;top:140px;left:var(--ipad-hero-left);right:auto;width:var(--ipad-hero-width);margin:0;-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden;contain:paint;}
+    #panel4>#performanceCompareCard{margin-top:8px!important;}
   }
 }
 .result-title{position:relative;z-index:1;color:#fff!important;font-size:20px!important;font-weight:650!important;line-height:1.25!important;letter-spacing:-.45px!important;}
@@ -18028,6 +18035,7 @@ const STEP_PANEL_IDS = ['panel1','panel2','panel4'];
 function syncIpadStep1ScrollLock(step){
   const isIpad = /iPad/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
   const isIpadViewport = window.matchMedia('(min-width:768px) and (max-width:1366px)').matches;
+  document.body.classList.toggle('step3-results-active', step===3 && !document.body.classList.contains('cover-open'));
   document.body.classList.toggle('ipad-selection-scroll-lock', isIpad && isIpadViewport && step<=2 && !document.body.classList.contains('cover-open'));
   document.body.classList.toggle('ipad-step3-scroll-limit', isIpad && isIpadViewport && step===3 && !document.body.classList.contains('cover-open'));
 }
