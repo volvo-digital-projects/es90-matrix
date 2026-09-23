@@ -1379,6 +1379,7 @@ body:not(.cover-open){overflow-x:clip;overflow-y:visible;}
     #panel4 .result-hero-slot{display:block;}
     #panel4 .result-hero.ipad-fixed{position:fixed;top:140px;left:var(--ipad-hero-left);right:auto;width:var(--ipad-hero-width);margin:0;-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden;contain:paint;}
     #panel4>#performanceCompareCard{margin-top:8px!important;}
+    #panel4 .footer-disclaimer{margin-top:6px!important;line-height:1.35!important;}
   }
 }
 .result-title{position:relative;z-index:1;color:#fff!important;font-size:20px!important;font-weight:650!important;line-height:1.25!important;letter-spacing:-.45px!important;}
@@ -19644,8 +19645,11 @@ function initIpadPinnedResultHero(){
     slot.style.setProperty('--ipad-hero-left',`${Math.round(rect.left)}px`);
     slot.style.setProperty('--ipad-hero-width',`${Math.round(rect.width)}px`);
     hero.classList.add('ipad-fixed');
-    const heroHeight = Math.ceil(hero.getBoundingClientRect().height);
-    slot.style.height = `${heroHeight}px`;
+    const heroRect = hero.getBoundingClientRect();
+    const heroHeight = Math.ceil(heroRect.height);
+    const slotDocumentTop = slot.getBoundingClientRect().top + window.scrollY;
+    const fixedLayerLead = Math.max(0,Math.round(slotDocumentTop-heroRect.top));
+    slot.style.height = `${Math.max(0,heroHeight-fixedLayerLead)}px`;
   };
   syncPinnedHero();
   window._ipadHeroResizeHandler = syncPinnedHero;
