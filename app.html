@@ -18554,6 +18554,35 @@ function resumeEs90InlineVideoPreviews(){
     if(video.dataset.es90Visible==='true' || !ES90_INLINE_VIDEO_OBSERVER) video.play().catch(()=>{});
   });
 }
+function wakeEs90DrivePreviewAfterLogin(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const panel = document.getElementById('panel1');
+    const video = panel?.querySelector('.es90-drive-preview');
+    if(!video || STATE.step!==1 || !panel.classList.contains('show') || document.body.classList.contains('cover-open')) return;
+    const rect = video.getBoundingClientRect();
+    if(rect.bottom<=0 || rect.top>=window.innerHeight) return;
+    video.dataset.es90Visible = 'true';
+    const modalSelector = '.es90-video-modal.is-open,.es90-charging-video-modal.is-open,.es90-trunk-video-modal.is-open,.es90-digital-key-video-modal.is-open';
+    const tryPlay = ()=>{
+      if(!video.isConnected || STATE.step!==1 || document.hidden || document.body.classList.contains('cover-open') || document.querySelector(modalSelector)) return;
+      video.play().catch(()=>{});
+    };
+    if(document.hidden){
+      const onVisible = ()=>{
+        if(document.hidden) return;
+        document.removeEventListener('visibilitychange',onVisible);
+        tryPlay();
+      };
+      document.addEventListener('visibilitychange',onVisible);
+      return;
+    }
+    if(video.readyState<HTMLMediaElement.HAVE_CURRENT_DATA) video.addEventListener('canplay',tryPlay,{once:true});
+    tryPlay();
+    setTimeout(()=>{
+      if(video.paused) tryPlay();
+    },280);
+  }));
+}
 function configureEs90VideoModal(modal,{videoSelector,closeSelector,bodyClass}){
   const video = modal.querySelector(videoSelector);
   video.controls = false;
@@ -20842,6 +20871,7 @@ function closeLoginCover(){
   if(cover) cover.hidden = true;
   document.body.classList.remove('cover-open');
   syncIpadStep1ScrollLock(STATE.step);
+  wakeEs90DrivePreviewAfterLogin();
   if(STATE.step===1) setTimeout(()=>{
     playWaitlistGroupShareAnimations(true);
     playWaitlistTotalAnimation(true);
