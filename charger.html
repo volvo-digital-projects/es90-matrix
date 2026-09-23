@@ -43,6 +43,11 @@ footer{display:flex;justify-content:space-between;gap:16px;margin-top:15px;paddi
 html.es90-video-safe-area,body.es90-video-safe-area{background:#000!important;color-scheme:dark}
 .es90-video-safe-area-guard{display:none;position:fixed;z-index:2147483647;left:0;right:0;bottom:0;height:var(--es90-video-safe-area-height,0px);background:#000;pointer-events:none;transform:translateZ(0)}
 html.es90-video-safe-area .es90-video-safe-area-guard{display:block}
+/* Match update markers across comparison, subsidy, and charging views. */
+.freshness{height:20px;padding:0 7px}
+.freshness-icon{width:13px;height:13px}
+.freshness-icon svg{width:12px;height:12px}
+@media(min-width:901px){.freshness{bottom:26px}}
 </style>
 </head>
 <body>
