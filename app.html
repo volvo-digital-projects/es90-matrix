@@ -890,7 +890,7 @@ body.ipad-step3-scroll-limit .content{
   padding-bottom:0!important;
 }
 body.ipad-step3-scroll-limit #panel4.panel.show{
-  padding-bottom:8px!important;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))!important;
 }
 @media (display-mode: standalone) and (min-width:1024px) and (orientation:landscape) {
   html{min-height:100dvh;}
@@ -900,7 +900,7 @@ body.ipad-step3-scroll-limit #panel4.panel.show{
   body:not(.cover-open) .panel.show{padding-bottom:32px;}
   body.ipad-step3-scroll-limit:not(.cover-open) #app,
   body.ipad-step3-scroll-limit:not(.cover-open) .content{padding-bottom:0!important;}
-  body.ipad-step3-scroll-limit:not(.cover-open) #panel4.panel.show{padding-bottom:8px!important;}
+  body.ipad-step3-scroll-limit:not(.cover-open) #panel4.panel.show{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))!important;}
 }
 
 /* ===== Result hero keyword badges ===== */
@@ -18096,9 +18096,9 @@ function showPanel(n){
   }
 }
 
-// STEP 3 keeps the outer app shell fixed, while wheel input scrolls the inner report document.
-// Move the five report sessions one at a time on desktop wheels and iPad swipes. Existing
-// in-page jumps (detail -> analysis, purchase -> detail, and so on) keep their own motion.
+// STEP 3 combines natural reading scroll with section navigation. Slow wheel/touch gestures
+// keep the browser's native movement so every long section remains readable; only a decisive
+// wheel burst or quick swipe moves one report section with the existing soft landing motion.
 function hasScrollableWheelAncestor(start, deltaY){
   for(let node=start instanceof Element ? start : null; node && node!==document.body; node=node.parentElement){
     const overflowY = getComputedStyle(node).overflowY;
@@ -18122,12 +18122,19 @@ const STEP3_SECTION_SCROLL = {
   animating:false,
   wheelDelta:0,
   wheelDirection:0,
+  wheelStartedAt:0,
+  wheelLastAt:0,
+  wheelEvents:0,
   wheelResetTimer:0,
   wheelQuietUntil:0,
   touchStartX:0,
   touchStartY:0,
+  touchStartTime:0,
+  touchLastY:0,
+  touchLastTime:0,
   touchTracking:false,
-  touchTriggered:false
+  touchTriggered:false,
+  touchNatural:false
 };
 
 function isStep3SectionNavigationReady(){
@@ -18227,6 +18234,37 @@ function normalizeWheelDelta(event){
   return event.deltaY*unit;
 }
 
+function resetStep3WheelIntent(){
+  clearTimeout(STEP3_SECTION_SCROLL.wheelResetTimer);
+  STEP3_SECTION_SCROLL.wheelDelta = 0;
+  STEP3_SECTION_SCROLL.wheelDirection = 0;
+  STEP3_SECTION_SCROLL.wheelStartedAt = 0;
+  STEP3_SECTION_SCROLL.wheelLastAt = 0;
+  STEP3_SECTION_SCROLL.wheelEvents = 0;
+  STEP3_SECTION_SCROLL.wheelResetTimer = 0;
+}
+
+function isDecisiveStep3WheelBurst(delta, now){
+  const direction = Math.sign(delta);
+  const gap = STEP3_SECTION_SCROLL.wheelLastAt ? now-STEP3_SECTION_SCROLL.wheelLastAt : Infinity;
+  if(direction!==STEP3_SECTION_SCROLL.wheelDirection || gap>170){
+    resetStep3WheelIntent();
+    STEP3_SECTION_SCROLL.wheelDirection = direction;
+    STEP3_SECTION_SCROLL.wheelStartedAt = now;
+  }
+  STEP3_SECTION_SCROLL.wheelLastAt = now;
+  STEP3_SECTION_SCROLL.wheelDelta += delta;
+  STEP3_SECTION_SCROLL.wheelEvents += 1;
+  clearTimeout(STEP3_SECTION_SCROLL.wheelResetTimer);
+  STEP3_SECTION_SCROLL.wheelResetTimer = setTimeout(resetStep3WheelIntent,210);
+  const elapsed = Math.max(1,now-STEP3_SECTION_SCROLL.wheelStartedAt);
+  const distance = Math.abs(STEP3_SECTION_SCROLL.wheelDelta);
+  const velocity = distance/elapsed;
+  const strongSingleTurn = Math.abs(delta)>=180;
+  const rapidBurst = STEP3_SECTION_SCROLL.wheelEvents>=2 && elapsed<=180 && distance>=140 && velocity>=1.05;
+  return strongSingleTurn || rapidBurst;
+}
+
 window.addEventListener('wheel', event=>{
   if(!isStep3SectionNavigationReady() || event.ctrlKey || !event.deltaY) return;
   if(hasScrollableWheelAncestor(event.target,event.deltaY)) return;
@@ -18238,51 +18276,75 @@ window.addEventListener('wheel', event=>{
   }
   const delta = normalizeWheelDelta(event);
   const direction = Math.sign(delta);
-  if(direction!==STEP3_SECTION_SCROLL.wheelDirection){
-    STEP3_SECTION_SCROLL.wheelDelta = 0;
-    STEP3_SECTION_SCROLL.wheelDirection = direction;
-  }
-  STEP3_SECTION_SCROLL.wheelDelta += delta;
-  clearTimeout(STEP3_SECTION_SCROLL.wheelResetTimer);
-  STEP3_SECTION_SCROLL.wheelResetTimer = setTimeout(()=>{
-    STEP3_SECTION_SCROLL.wheelDelta = 0;
-    STEP3_SECTION_SCROLL.wheelDirection = 0;
-  },180);
-  event.preventDefault();
-  const threshold = Math.min(56,Math.max(36,window.innerHeight*0.045));
-  if(Math.abs(STEP3_SECTION_SCROLL.wheelDelta)<threshold) return;
-  STEP3_SECTION_SCROLL.wheelDelta = 0;
-  moveStep3BySection(direction);
+  if(!isDecisiveStep3WheelBurst(delta,now)) return;
+  const moved = moveStep3BySection(direction);
+  resetStep3WheelIntent();
+  // At the first/last section there is no snap target. Leave the event native so the
+  // hero above and the action buttons/footer below always remain reachable.
+  if(moved) event.preventDefault();
 },{passive:false});
 
 function isStep3TouchControl(target){
   return target instanceof Element && !!target.closest('button,a,input,select,textarea,video,audio,[contenteditable="true"],[role="button"],[role="slider"],[role="listbox"]');
 }
 
+function isDecisiveStep3Swipe(distance, elapsed, segmentVelocity){
+  const safeElapsed = Math.max(1,elapsed);
+  return Math.abs(distance)>=64 && safeElapsed<=260 && Math.max(Math.abs(distance)/safeElapsed,segmentVelocity)>=0.65;
+}
+
 window.addEventListener('touchstart',event=>{
   const touch = event.touches[0];
   STEP3_SECTION_SCROLL.touchTracking = !!touch && event.touches.length===1 && isStep3SectionNavigationReady() && !isStep3TouchControl(event.target);
   STEP3_SECTION_SCROLL.touchTriggered = false;
+  STEP3_SECTION_SCROLL.touchNatural = false;
   if(!STEP3_SECTION_SCROLL.touchTracking) return;
   STEP3_SECTION_SCROLL.touchStartX = touch.clientX;
   STEP3_SECTION_SCROLL.touchStartY = touch.clientY;
+  STEP3_SECTION_SCROLL.touchStartTime = performance.now();
+  STEP3_SECTION_SCROLL.touchLastY = touch.clientY;
+  STEP3_SECTION_SCROLL.touchLastTime = STEP3_SECTION_SCROLL.touchStartTime;
 },{passive:true});
 
 window.addEventListener('touchmove',event=>{
-  if(!STEP3_SECTION_SCROLL.touchTracking || STEP3_SECTION_SCROLL.touchTriggered || event.touches.length!==1) return;
+  if(!STEP3_SECTION_SCROLL.touchTracking || event.touches.length!==1) return;
+  if(STEP3_SECTION_SCROLL.touchTriggered){
+    if(event.cancelable) event.preventDefault();
+    return;
+  }
+  if(STEP3_SECTION_SCROLL.touchNatural) return;
   const touch = event.touches[0];
   const deltaX = STEP3_SECTION_SCROLL.touchStartX-touch.clientX;
   const deltaY = STEP3_SECTION_SCROLL.touchStartY-touch.clientY;
-  if(Math.abs(deltaY)<Math.abs(deltaX)*1.15) return;
-  event.preventDefault();
-  if(Math.abs(deltaY)<38) return;
-  STEP3_SECTION_SCROLL.touchTriggered = true;
-  moveStep3BySection(Math.sign(deltaY));
+  const now = performance.now();
+  const elapsed = Math.max(1,now-STEP3_SECTION_SCROLL.touchStartTime);
+  const segmentElapsed = Math.max(1,now-STEP3_SECTION_SCROLL.touchLastTime);
+  const segmentVelocity = Math.abs(STEP3_SECTION_SCROLL.touchLastY-touch.clientY)/segmentElapsed;
+  const totalVelocity = Math.abs(deltaY)/elapsed;
+  STEP3_SECTION_SCROLL.touchLastY = touch.clientY;
+  STEP3_SECTION_SCROLL.touchLastTime = now;
+  if(Math.abs(deltaY)<Math.abs(deltaX)*1.15){
+    if(Math.abs(deltaX)>18) STEP3_SECTION_SCROLL.touchNatural = true;
+    return;
+  }
+  const decisiveSwipe = isDecisiveStep3Swipe(deltaY,elapsed,segmentVelocity);
+  if(decisiveSwipe){
+    const moved = moveStep3BySection(Math.sign(deltaY));
+    if(moved){
+      if(event.cancelable) event.preventDefault();
+      STEP3_SECTION_SCROLL.touchTriggered = true;
+    }else{
+      STEP3_SECTION_SCROLL.touchNatural = true;
+    }
+    return;
+  }
+  if(Math.abs(deltaY)>=24 && elapsed>=180 && totalVelocity<0.45) STEP3_SECTION_SCROLL.touchNatural = true;
 },{passive:false});
 
 function finishStep3TouchGesture(){
   STEP3_SECTION_SCROLL.touchTracking = false;
   STEP3_SECTION_SCROLL.touchTriggered = false;
+  STEP3_SECTION_SCROLL.touchNatural = false;
 }
 window.addEventListener('touchend',finishStep3TouchGesture,{passive:true});
 window.addEventListener('touchcancel',finishStep3TouchGesture,{passive:true});
