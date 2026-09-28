@@ -17125,7 +17125,7 @@ D.prices['Lexus ES'] = {
 D.specs['Lexus ES'] = Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>{
   const is350e = trim.startsWith('350e');
   return [trim, {
-    battery_kwh:is350e?77:74.7,
+    battery_kwh:74.7,
     battery_maker:null,
     range_km:is350e?478:(trim==='500e Premium'?435:415),
     power_ps:is350e?227:347,
@@ -17158,7 +17158,7 @@ function setLexusComparisonValues(itemName, values){
     if(item){ item.competitor = values; return; }
   }
 }
-setLexusComparisonValues('배터리 용량 (kWh)', lexusTrimValues('77kWh','74.7kWh'));
+setLexusComparisonValues('배터리 용량 (kWh)', lexusTrimValues('74.7kWh','74.7kWh'));
 setLexusComparisonValues('모터 최고 출력 (kW)', lexusTrimValues('165kW','252kW'));
 setLexusComparisonValues('구동 방식', lexusTrimValues('전륜구동','DIRECT4 4륜구동'));
 setLexusComparisonValues('14.5인치 터치 스크린 센터 디스플레이', lexusTrimValues(true));
