@@ -17107,12 +17107,20 @@ function lexusTrimValues(es350eValue, es500eValue=es350eValue){
     trim.startsWith('350e') ? es350eValue : es500eValue
   ]));
 }
+const LEXUS_ES_GETCHA_CHECKED_AT = '2026-09-28';
+function lexusGetchaPrice(trim, msrp){
+  return {
+    msrp, promo:0, subsidy:0, total:msrp, discountedPrice:msrp,
+    promotionSource:'Getcha', promotionCheckedAt:LEXUS_ES_GETCHA_CHECKED_AT,
+    getchaMatchKey:`Lexus ES / ${trim}`
+  };
+}
 D.prices['Lexus ES'] = {
-  '350e Premium': {msrp:71600000, promo:0, subsidy:0, total:71600000},
-  '350e Luxury':  {msrp:80200000, promo:0, subsidy:0, total:80200000},
-  '350e VIP':     {msrp:83900000, promo:0, subsidy:0, total:83900000},
-  '500e Premium': {msrp:77000000, promo:0, subsidy:0, total:77000000},
-  '500e Luxury':  {msrp:84900000, promo:0, subsidy:0, total:84900000}
+  '350e Premium': lexusGetchaPrice('350e Premium',71600000),
+  '350e Luxury':  lexusGetchaPrice('350e Luxury',80200000),
+  '350e VIP':     lexusGetchaPrice('350e VIP',83900000),
+  '500e Premium': lexusGetchaPrice('500e Premium',77000000),
+  '500e Luxury':  lexusGetchaPrice('500e Luxury',84900000)
 };
 D.specs['Lexus ES'] = Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>{
   const is350e = trim.startsWith('350e');
@@ -18534,6 +18542,12 @@ async function syncDeploymentUpdatedAt(){
     const matrixUpdatedAt = formatDeploymentUpdatedAt(versionInfo.matrixUpdatedAt);
     if(!matrixUpdatedAt) return;
     D.meta.updated = matrixUpdatedAt;
+    const competitorPriceCheckedAt = formatDeploymentUpdatedAt(versionInfo.competitorPriceCheckedAt)?.slice(0,10);
+    if(competitorPriceCheckedAt){
+      Object.values(D.prices['Lexus ES']||{}).forEach(price=>{
+        price.promotionCheckedAt = competitorPriceCheckedAt;
+      });
+    }
     document.querySelectorAll('.waitlist-update-time').forEach(el=>{ el.textContent = `${RESERVATION_UPDATED_AT} 기준`; });
     document.querySelectorAll('.waitlist-update-stamp').forEach(el=>{
       el.title = '예약정보 업데이트 시각';
