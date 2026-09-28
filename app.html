@@ -514,8 +514,9 @@ button{font-family:inherit;}
 .vbar-track-pair{display:flex;gap:10px;align-items:flex-end;height:120px;margin-bottom:8px;}
 .vbar-track{width:36px;height:100%;background:var(--line-soft);border-radius:9px 9px 0 0;display:flex;align-items:flex-end;overflow:hidden;}
 .vbar-fill{width:100%;border-radius:4px 4px 0 0;transition:height 1s ease,background-color .18s ease;}
-.cat-compare-wrap{display:flex;gap:16px;align-items:stretch;}
+.cat-compare-wrap{display:flex;gap:16px;align-items:stretch;position:relative;}
 .cat-compare-wrap .vbar-wrap{flex:1;min-width:0;}
+.lexus-update-overlay{position:absolute;left:50%;top:50%;z-index:4;transform:translate(-50%,-50%);min-width:230px;padding:17px 30px;border:1px solid rgba(244,105,55,.42);border-radius:15px;background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(255,238,225,.76));box-shadow:0 12px 32px rgba(26,57,78,.16),inset 0 1px 0 rgba(255,255,255,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--orange-deep);font-size:17px;font-weight:900;letter-spacing:-.35px;text-align:center;white-space:nowrap;pointer-events:none;}
 #categoryCompareCard{padding-top:18px!important;padding-bottom:7px!important;}
 #categoryCompareCard .card-title{margin-bottom:8px;}
 #categoryCompareCard .vbar-wrap{row-gap:12px;padding:3px 4px 2px;}
@@ -698,6 +699,7 @@ button{font-family:inherit;}
 .loss-badge{display:inline-block;background:rgb(37,99,235);color:#fff;font-size:11px;font-weight:700;padding:4px 15px;border-radius:999px;margin-bottom:7px;letter-spacing:0.2px;}
 .spec-summary-gapnum.is-loss{color:rgb(37,99,235);}
 @media(max-width:640px){.cat-compare-wrap{flex-direction:column;}#categoryCompareCard .category-card-footer{width:100%;}}
+@media(max-width:640px){.lexus-update-overlay{top:38%;min-width:190px;padding:14px 22px;font-size:15px;}}
 .ov-win{display:inline-block;width:18px;font-size:12px;text-align:center;flex-shrink:0;}
 .ov-row{display:flex;align-items:flex-start;gap:0;}
 .ov-row-val{flex:1;min-width:0;}
@@ -19593,6 +19595,7 @@ if(score.priceDiff !== null){
             </div>
           </div>`;
         })()}
+        ${brandKey==='Lexus ES'?'<div class="lexus-update-overlay" role="status" aria-label="렉서스 ES 옵션 정보 추후 업데이트 예정">추후 업데이트 예정</div>':''}
       </div>
       <div class="category-card-footer">
         <div class="vbar-legend">
@@ -20455,6 +20458,9 @@ function renderOptTable(cat){
             compCell = cvTrue && nameDetail
               ? `<span class="ov-yes">✓</span> <span style="font-size:11px;color:var(--ink-soft);">${nameDetail.detail}</span>`
               : renderCell(it.comp, STATE.brandKey, STATE.compTrim);
+          }
+          if(STATE.brandKey==='Lexus ES' && String(it.comp).trim()==='확인 불가'){
+            compCell = '<span class="ov-spec">추후 업데이트 예정</span>';
           }
           if(it.blankComp) compCell = '';
           if(STATE.brandKey==='Polestar 4' && ['Rear motor','Dual motor'].includes(STATE.compTrim) && typeof compCell==='string'){
