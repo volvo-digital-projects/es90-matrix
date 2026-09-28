@@ -17134,7 +17134,7 @@ D.specs['Lexus ES'] = Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>{
     trunk_l:'441 확인 불가',
     warranty_basic:'확인 불가',
     warranty_battery:'확인 불가',
-    drive_type:is350e?'전륜 구동':'DIRECT4 사륜 구동'
+    drive_type:is350e?'전륜구동':'DIRECT4 4륜구동'
   }];
 }));
 D.packages['Lexus ES'] = [];
@@ -17160,7 +17160,7 @@ function setLexusComparisonValues(itemName, values){
 }
 setLexusComparisonValues('배터리 용량 (kWh)', lexusTrimValues('77kWh','75kWh'));
 setLexusComparisonValues('모터 최고 출력 (kW)', lexusTrimValues('165kW','252kW'));
-setLexusComparisonValues('구동 방식', lexusTrimValues('전륜 구동','DIRECT4 사륜 구동'));
+setLexusComparisonValues('구동 방식', lexusTrimValues('전륜구동','DIRECT4 4륜구동'));
 setLexusComparisonValues('14.5인치 터치 스크린 센터 디스플레이', lexusTrimValues(true));
 setLexusComparisonValues('19인치', Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>[
   trim, trim==='500e Luxury' ? '확인 불가' : '235/55R19'
