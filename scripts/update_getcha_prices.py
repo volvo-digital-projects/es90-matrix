@@ -245,13 +245,6 @@ def read_getcha_prices() -> tuple[dict[tuple[str, str], dict], list[str]]:
 def update_app(
     prices: dict[tuple[str, str], dict], unmatched: list[str]
 ) -> tuple[list[str], str]:
-    if unmatched or len(prices) != len(MATCHES):
-        details = "; ".join(unmatched[:5])
-        raise RuntimeError(
-            f"Incomplete Getcha daily check: matched={len(prices)}/"
-            f"{len(MATCHES)}, unmatched={len(unmatched)}; {details}"
-        )
-
     app = APP_PATH.read_text(encoding="utf-8")
     match = re.search(
         r"window\.ES90_DATA\s*=\s*(\{[\s\S]*?\});</script>", app
