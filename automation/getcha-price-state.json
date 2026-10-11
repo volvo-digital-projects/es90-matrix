@@ -1,9 +1,11 @@
 {
-  "checkedAt": "2026-10-02T01:30:58+09:00",
+  "checkedAt": "2026-10-12T08:00:32+09:00",
   "expectedTrimCount": 21,
-  "matchedTrimCount": 21,
-  "unmatchedTrimCount": 0,
-  "unmatchedTrims": [],
+  "matchedTrimCount": 20,
+  "unmatchedTrimCount": 1,
+  "unmatchedTrims": [
+    "Tesla / Model Y L: exact match failed (Exact Getcha trim price match failed: L AWD (0 matches); section='등급명 출고가 할인가 최대 할인 프리미엄RWD (2026.10) 4,999 만원 - - 프리미엄 롱레인지 AWD (2026.10) 6,699 만원 - - L 프리미엄 AWD (2026.10) 7,299 만원 - -')"
+  ],
   "priceChangedTrimCount": 0,
   "priceChangedTrims": []
 }
