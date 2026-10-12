@@ -33,6 +33,18 @@ import update_getcha_prices
 
 
 class UpdateGetchaPricesTests(unittest.TestCase):
+    def test_all_es90_trims_are_27_model_year(self) -> None:
+        app = update_getcha_prices.APP_PATH.read_text(encoding="utf-8")
+        embedded = json.loads(
+            app.split("window.ES90_DATA = ", 1)[1].split(";</script>", 1)[0]
+        )
+
+        self.assertTrue(embedded["prices"]["ES90"])
+        self.assertEqual(
+            {price.get("modelYear") for price in embedded["prices"]["ES90"].values()},
+            {27},
+        )
+
     def test_matched_prices_are_updated_while_unmatched_prices_are_preserved(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

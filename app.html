@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ES90 분석툴">
+<meta name="apple-mobile-web-app-title" content="ES90 27년식 분석툴">
 <meta name="theme-color" content="#1c3d5a">
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWMzZDVhIi8+PHRleHQgeD0iOTAiIHk9IjcwIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iI2ZkNjQwOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgbGV0dGVyLXNwYWNpbmc9IjMiPlZPTFZPPC90ZXh0Pjx0ZXh0IHg9IjkwIiB5PSIxMDIiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjMwIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5FUzkwPC90ZXh0Pjx0ZXh0IHg9IjkwIiB5PSIxMjgiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuNTUpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7qsIDshLHruYQg67aE7ISd7Yi0PC90ZXh0Pjwvc3ZnPg==">
-<title>Volvo ES90 경쟁력 분석 매트릭스</title>
+<title>Volvo ES90 (27년식) 경쟁력 분석 매트릭스</title>
 <link rel="preload" href="https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="./assets/es90-trim-plus.webp?v=20260820-1" as="image" type="image/webp" fetchpriority="high">
 <link rel="preload" href="./assets/es90-trim-ultra.webp?v=20260820-1" as="image" type="image/webp" fetchpriority="high">
@@ -17485,10 +17485,14 @@ function es90TrimDisplay(trim){ return ES90_TRIM_DISPLAY[trim] || trim; }
 function es90TrimMenuDisplay(trim){ return es90TrimDisplay(trim).replace('Extended Range','ER'); }
 function es90TrimCompact(trim){ return es90TrimDisplay(trim).replace('Single Motor Extended Range','Single Motor ER'); }
 function modelYearSuffix(modelYear){ return modelYear ? ` (${modelYear}년식)` : ''; }
-function es90ResultLabel(trim, compact=false){
+function es90ModelYear(trim){ return D.prices.ES90?.[trim]?.modelYear || 27; }
+function es90ModelLabel(prefix='ES90', trim=STATE.es90Trim){ return `${prefix}${modelYearSuffix(es90ModelYear(trim))}`; }
+function es90TrimYearDisplay(trim, compact=false){
   const display = compact ? es90TrimMenuDisplay(trim) : es90TrimDisplay(trim);
-  const modelYear = D.prices.ES90?.[trim]?.modelYear;
-  return `ES90 ${display}${modelYearSuffix(modelYear)}`;
+  return `${display}${modelYearSuffix(es90ModelYear(trim))}`;
+}
+function es90ResultLabel(trim, compact=false){
+  return `ES90 ${es90TrimYearDisplay(trim, compact)}`;
 }
 const ES90_TRIM_IMAGE_SOURCES = Object.freeze({
   plus:'assets/es90-trim-plus.webp?v=20260820-1',
@@ -17931,7 +17935,7 @@ function renderApp(){
       <div class="topbar-inner">
         <div class="brand-mark">
           <div>
-            <div class="brand-word" style="font-family:'Paperlogy','VolvoCentum SemiBold','VolvoCentum',sans-serif;letter-spacing:0.1px;">Volvo ES90 경쟁력 분석 매트릭스</div>
+            <div class="brand-word" style="font-family:'Paperlogy','VolvoCentum SemiBold','VolvoCentum',sans-serif;letter-spacing:0.1px;">Volvo ES90 (27년식) 경쟁력 분석 매트릭스</div>
             <div class="brand-tagline">볼보 공식 딜러사 소속 영업직원 · 스페셜리스트만 이용 가능합니다.</div>
           </div>
         </div>
@@ -18091,7 +18095,7 @@ function restoreChargerReturnStep(){
   }
 }
 
-const STEP_LABELS = ['Volvo ES90 선택','비교모델 및 트림 선택','종합분석 결과'];
+const STEP_LABELS = ['Volvo ES90 (27년식) 선택','비교모델 및 트림 선택','종합분석 결과'];
 function renderSteps(){
   const bar = document.getElementById('stepsBar');
   bar.innerHTML = STEP_LABELS.map((l,i)=>{
@@ -19119,7 +19123,7 @@ function renderStep1(){
 
     <div class="card waitlist-card" id="waitlistCard">
       <div class="waitlist-heading-row">
-        <div class="card-title">ES90 대기고객 선택</div>
+        <div class="card-title">ES90 (27년식) 대기고객 선택</div>
         <div class="waitlist-update-stamp" title="마지막 업데이트 날짜" aria-label="마지막 업데이트 ${RESERVATION_UPDATED_AT}">
           <span class="waitlist-update-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke-width="1.8"/><path d="M12 7.5V12l3.2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <span class="waitlist-update-copy"><span class="waitlist-update-label">UPDATE</span><span class="waitlist-update-time">${RESERVATION_UPDATED_AT} 기준</span></span>
@@ -19162,7 +19166,7 @@ function renderStep1(){
               <div class="waitlist-bar-fill${isTop?'':' navy'}" data-h="${h}" style="height:0%;"></div>
             </div>
             <div class="waitlist-bar-count"><span class="waitlist-bar-pct">${pct}%</span></div>
-            <div class="waitlist-bar-label">${es90TrimMenuDisplay(t.trim)}${t.variant?`<span class="waitlist-bar-variant">${t.variant}</span>`:''}</div>
+            <div class="waitlist-bar-label">${es90TrimYearDisplay(t.trim,true)}${t.variant?`<span class="waitlist-bar-variant">${t.variant}</span>`:''}</div>
           </div>`;
         }).join('')}
       </div>
@@ -19195,12 +19199,12 @@ function renderStep1(){
           <div class="trim-card-inner">
             <div class="trim-card-left">
               <div class="trim-card-heading" style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">
-                <div class="trim-badge" style="margin-bottom:0;font-family:'Paperlogy','VolvoCentum SemiBold','VolvoCentum',sans-serif;">Volvo ES90</div>
+                <div class="trim-badge" style="margin-bottom:0;font-family:'Paperlogy','VolvoCentum SemiBold','VolvoCentum',sans-serif;">${es90ModelLabel('Volvo ES90',trim)}</div>
                 ${isReservationBest ? `<div class="waitlist-best-label" style="margin-bottom:0;">★ 실시간 BEST</div>` : ''}
               </div>
-              <div class="trim-name" style="font-family:'Paperlogy','VolvoCentum SemiBold','VolvoCentum',sans-serif;">${es90TrimDisplay(trim)}${item.variant?`<span class="trim-variant-badge">${item.variant}</span>`:''}</div>
+              <div class="trim-name" style="font-family:'Paperlogy','VolvoCentum SemiBold','VolvoCentum',sans-serif;">${es90TrimYearDisplay(trim)}${item.variant?`<span class="trim-variant-badge">${item.variant}</span>`:''}</div>
             </div>
-            <div class="trim-card-thumb"><img src="${es90TrimImage(trim)}" alt="${es90TrimDisplay(trim)} 차량" width="768" height="432" loading="eager" decoding="sync" fetchpriority="high"></div>
+            <div class="trim-card-thumb"><img src="${es90TrimImage(trim)}" alt="${es90TrimYearDisplay(trim)} 차량" width="768" height="432" loading="eager" decoding="sync" fetchpriority="high"></div>
             <div class="trim-card-right">
               <div class="trim-price-big${isReservationBest?'':' navy'}">${(()=>{ const lbl = cardPrice? fmtWonRange(cardPrice.total, trim):'가격 미정'; const {main,sub} = splitPriceLabel(lbl); return sub ? `<span class="trim-price-main">${main}</span><span class="trim-price-sub">${sub}</span>` : `<span class="trim-price-main">${main}</span>`; })()}</div>
             </div>
@@ -19565,11 +19569,11 @@ if(score.priceDiff !== null){
       <div class="hero-price-row">
         <div class="hero-price-item">
           <div class="hpi-top">
-            <div class="hpi-label">Volvo ES90</div>
+            <div class="hpi-label">${es90ModelLabel('Volvo ES90',es90Trim)}</div>
             <div class="hero-es-trim-select-wrap">
               <button type="button" class="hero-es-trim-trigger" aria-label="ES90 트림 변경" aria-haspopup="listbox" onclick="toggleEs90ResultTrimMenu(event)">
                 <span class="hero-es-trim-selected">
-                  <span class="hero-es-trim-selected-main">${selectedEs90ResultTrim?.label||es90TrimMenuDisplay(es90Trim)}</span>
+                  <span class="hero-es-trim-selected-main">${(selectedEs90ResultTrim?.label||es90TrimMenuDisplay(es90Trim))+modelYearSuffix(es90ModelYear(es90Trim))}</span>
                   ${selectedEs90ResultTrim?.suspensionLabel?`<span class="hero-es-trim-selected-sub">${selectedEs90ResultTrim.suspensionLabel}</span>`:''}
                 </span>
               </button>
@@ -19577,7 +19581,7 @@ if(score.priceDiff !== null){
                 ${ES90_RESULT_TRIM_OPTIONS.map(item=>{
                   const selectedAirSuspension = SELECTED_ES_AIR_SUSPENSION_TRIMS.has(item.trim);
                   const isSelected = item.trim===es90Trim && item.airSuspension===selectedAirSuspension;
-                  return `<button type="button" class="hero-es-trim-option${isSelected?' is-selected':''}" role="option" aria-selected="${isSelected}" onclick="selectEs90ResultTrim(event,'${item.trim}','${item.airSuspension?'air':'standard'}')"><span class="hero-es-trim-option-main">${item.label}</span>${item.suspensionLabel?`<span class="hero-es-trim-option-sub">${item.suspensionLabel}</span>`:''}</button>`;
+                  return `<button type="button" class="hero-es-trim-option${isSelected?' is-selected':''}" role="option" aria-selected="${isSelected}" onclick="selectEs90ResultTrim(event,'${item.trim}','${item.airSuspension?'air':'standard'}')"><span class="hero-es-trim-option-main">${item.label}${modelYearSuffix(es90ModelYear(item.trim))}</span>${item.suspensionLabel?`<span class="hero-es-trim-option-sub">${item.suspensionLabel}</span>`:''}</button>`;
                 }).join('')}
               </div>
             </div>
@@ -19654,7 +19658,7 @@ if(score.priceDiff !== null){
               <div class="spec-summary-gap">
                 <div class="win-badge">${optionGap ? `우위 항목 +${optionGap}개` : '우위 항목 동일'}</div>
                 <div class="spec-summary-winner-trim">${optionWinner}</div>
-                <div class="spec-summary-gapsub">ES90 ${score.esTotal}개 <span style="opacity:.5;">vs</span> ${compName} ${score.compTotal}개</div>
+                <div class="spec-summary-gapsub">${es90ModelLabel('ES90',es90Trim)} ${score.esTotal}개 <span style="opacity:.5;">vs</span> ${compName} ${score.compTotal}개</div>
               </div>
             </div>
           </div>`;
@@ -19753,7 +19757,7 @@ if(score.priceDiff !== null){
 
     <div class="footer-actions">
       <button class="btn-secondary" onclick="resetAll()">← 처음부터 다시</button>
-      <button class="btn-secondary" onclick="showPanel(1)">☷ ES90 대기고객 선택</button>
+      <button class="btn-secondary" onclick="showPanel(1)">☷ ES90 (27년식) 대기고객 선택</button>
       <button class="btn-secondary" onclick="openStep2WithDirectDefault()">⇄ 다른 경쟁모델과 비교</button>
       <button class="btn-secondary btn-live-subsidy" onclick="openLiveSubsidyStatus()"><span class="footer-action-money-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.8" y="5.5" width="18.4" height="13" rx="2.4"/><path d="M7 5.5a3.5 3.5 0 0 1-4.2 3.4M17 5.5a3.5 3.5 0 0 0 4.2 3.4M7 18.5a3.5 3.5 0 0 0-4.2-3.4M17 18.5a3.5 3.5 0 0 1 4.2-3.4"/><circle cx="12" cy="12" r="3.1"/><path d="M10.7 10.8h2.6M10.7 12.1h2.6M12 10.8v2.8"/></svg></span><span class="btn-live-subsidy-label">전국 실시간 보조금 현황</span><span class="subsidy-supplement-badge" data-subsidy-supplement-badge hidden><span class="subsidy-supplement-badge-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 2.2a3.2 3.2 0 0 0-3.2 3.2v1.8L3.6 9.4h8.8l-1.2-2.2V5.4A3.2 3.2 0 0 0 8 2.2Z"/><path d="M6.7 11.2a1.4 1.4 0 0 0 2.6 0"/></svg></span><span class="subsidy-supplement-badge-text">추경확인</span></span></button>
       <button class="btn-secondary btn-education-material" onclick="open350kwChargerNetwork()"><span>⚡ 350kW 이상 초고속 충전</span>${educationMaterialBadgeMarkup()}</button>
@@ -19840,7 +19844,7 @@ function renderUpgradeOptList(es90Trim){
       const sorted=[...kr,...en];
       html += `
         <div class="upgrade-box" style="margin-bottom:12px;">
-          <div class="ug-title">ES90 <span class="trim-highlight">${shortTrimBadge(nextTrim)}</span> <span style="color:var(--ink);font-weight:600;">트림에서 추가 가능한 옵션</span></div>
+          <div class="ug-title">${es90ModelLabel('ES90',nextTrim)} <span class="trim-highlight">${shortTrimBadge(nextTrim)}</span> <span style="color:var(--ink);font-weight:600;">트림에서 추가 가능한 옵션</span></div>
           <ul class="upgrade-opt-list">
             ${sorted.slice(0,16).map(o=>`<li>${o}</li>`).join('') || '<li>추가 차별 옵션 없음</li>'}
           </ul>
@@ -20036,7 +20040,7 @@ function renderSpecCompare(esSpec, compSpec, compName, es90Trim, compTrim, brand
           <div class="spec-summary-gap">
             <div class="win-badge">${winCountGap ? `우위 항목 +${winCountGap}개` : '우위 항목 동일'}</div>
             <div class="spec-summary-winner-trim">${winnerTrimLabel}</div>
-            <div class="spec-summary-gapsub">ES90 ${esWins}개 <span style="opacity:.5;">vs</span> ${compName} ${compWins}개</div>
+            <div class="spec-summary-gapsub">${es90ModelLabel('ES90',es90Trim)} ${esWins}개 <span style="opacity:.5;">vs</span> ${compName} ${compWins}개</div>
           </div>
         </div>
       </div>
@@ -21011,8 +21015,8 @@ function updatePkgCalc(){
     <div class="pkg-calc-title">추가내역 및 금액</div>
     <div class="pkg-calc-vs-row">
       <div class="pkg-calc-vside">
-        <div class="pkg-calc-vlabel">Volvo ES90</div>
-        <div class="pkg-calc-vtrim">${es90TrimCompact(esTrim)}</div>
+        <div class="pkg-calc-vlabel">${es90ModelLabel('Volvo ES90',esTrim)}</div>
+        <div class="pkg-calc-vtrim">${es90TrimYearDisplay(esTrim,true)}</div>
         <div class="pkg-calc-vprice es90-price">${esPrice? fmtWonRange(effectiveEsTotal, esTrim):'가격 미정'}</div>
       </div>
       <div class="pkg-calc-vdivider">vs</div>
@@ -21035,8 +21039,8 @@ function updatePkgCalc(){
       const esCheaper = effectiveEsTotal < displayedCompTotal;
       const competitorFullLabel = fullCompTrimLabel(brandKey, compTrim);
       const samePrice = effectiveEsTotal===displayedCompTotal;
-      const priceWinner = samePrice ? '동일 가격' : `${esCheaper ? `ES90 ${es90TrimCompact(esTrim)}` : competitorFullLabel} 가격우위`;
-      return `<div class="pkg-calc-gapline"><span class="pkg-calc-gap-context">ES90 ${es90TrimCompact(esTrim)} 대비</span><span class="pkg-calc-gap-result"><b>${fmtWon(gap)}</b> 가격차이 발생<span class="pkg-calc-gap-winner">(${priceWinner})</span></span></div>`;
+      const priceWinner = samePrice ? '동일 가격' : `${esCheaper ? es90ResultLabel(esTrim,true) : competitorFullLabel} 가격우위`;
+      return `<div class="pkg-calc-gapline"><span class="pkg-calc-gap-context">${es90ResultLabel(esTrim,true)} 대비</span><span class="pkg-calc-gap-result"><b>${fmtWon(gap)}</b> 가격차이 발생<span class="pkg-calc-gap-winner">(${priceWinner})</span></span></div>`;
     })()}
   `;
   const pkgBox = document.getElementById('pkgCalcBox');
