@@ -17524,6 +17524,17 @@ function compBaseLabel(compName, compTrim){
 function compLabel(compName, compTrim){
   return compBaseLabel(compName, compTrim);
 }
+function modelYearSuffix(modelYear){
+  return modelYear ? ` (${modelYear}년식)` : '';
+}
+// 페이지 3의 성능비교·상세옵션 표 헤더 두 곳에서만 연식을 표시한다.
+function page3Es90Label(trim){
+  return `${es90ResultLabel(trim,true)}${modelYearSuffix(D.prices.ES90?.[trim]?.modelYear)}`;
+}
+function page3CompLabel(compName, compTrim){
+  const brandKey = compBrandKeyFromDisplayName(compName);
+  return `${compLabel(compName,compTrim)}${modelYearSuffix(D.prices[brandKey]?.[compTrim]?.modelYear)}`;
+}
 // 성능·옵션 비교 결과 카드에서만 6GT의 한정판 접미어를 생략한다.
 function resultCompLabel(compName, compTrim){
   let label = compBaseLabel(compName, compTrim);
@@ -19987,7 +19998,7 @@ function renderSpecCompare(esSpec, compSpec, compName, es90Trim, compTrim, brand
     <div class="spec-compare-wrap">
       <div class="spec-table-column">
       <div class="table-scroll"><table class="opt-table spec-table">
-        <thead><tr><th>항목</th><th>${es90ResultLabel(es90Trim,true)}</th><th>${compLabel(compName, compTrim)}</th></tr></thead>
+        <thead><tr><th>항목</th><th>${page3Es90Label(es90Trim)}</th><th>${page3CompLabel(compName,compTrim)}</th></tr></thead>
         <tbody>
           ${rows.map((r,i)=>{
             const excludedCls = i>=coreRows.length ? ' spec-excluded' : '';
@@ -20440,7 +20451,7 @@ function renderOptTable(cat){
   }
 
   table.innerHTML = `
-    <thead><tr><th>옵션 항목</th><th class="center">${es90ResultLabel(STATE.es90Trim,true)}</th><th class="center">${compLabel(compName, STATE.compTrim)}</th></tr></thead>
+    <thead><tr><th>옵션 항목</th><th class="center">${page3Es90Label(STATE.es90Trim)}</th><th class="center">${page3CompLabel(compName,STATE.compTrim)}</th></tr></thead>
     <tbody>
       ${orderedItems.map(it=>{
         const evTrue = it.es90===true;
