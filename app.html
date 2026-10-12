@@ -17520,9 +17520,6 @@ function compBrandKeyFromDisplayName(compName){
 function compModelYear(brandKey, compTrim){
   return D.prices[brandKey]?.[compTrim]?.modelYear || null;
 }
-function brandModelYear(brandKey){
-  return Object.values(D.prices[brandKey]||{}).map(price=>price?.modelYear).find(Boolean) || null;
-}
 function compBaseLabel(compName, compTrim){
   if(compTrim==='EV' || compTrim==='Model Y L') return compName;
   return `${compName} ${compTrimDisplay(compTrim)}`;
@@ -19248,7 +19245,7 @@ function renderStep2(){
         <div class="group-sub">${g.desc}</div>
         <div class="group-brand-list">
           <div class="group-sort-note">A·B·C 순</div>
-          ${g.brands.map(b=>`<div class="group-brand-row"><span class="logo-badge"></span><span>${BRAND_DISPLAY_FULL[b]}${modelYearSuffix(brandModelYear(b))}${b==='Lexus ES'?'<span class="group-new-badge">NEW</span>':b==='Tesla Model S'?' <span style="color:var(--ink-faint);font-weight:500;">(2026년 6월 단종)</span>':b==='BMW 6 Series GT'?' <span style="color:var(--ink-faint);font-weight:500;">(2024년 12월 단종)</span>':''}</span></div>`).join('')}
+          ${g.brands.map(b=>`<div class="group-brand-row"><span class="logo-badge"></span><span>${BRAND_DISPLAY_FULL[b]}${b==='Lexus ES'?'<span class="group-new-badge">NEW</span>':b==='Tesla Model S'?' <span style="color:var(--ink-faint);font-weight:500;">(2026년 6월 단종)</span>':b==='BMW 6 Series GT'?' <span style="color:var(--ink-faint);font-weight:500;">(2024년 12월 단종)</span>':''}</span></div>`).join('')}
         </div>
         <div class="group-selection-share" aria-label="${g.name} 선택 비율 ${getGroupSelectionPercent(key)}%">
           <span class="group-selection-label"><span class="group-selection-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.8" stroke="currentColor" stroke-width="1.8"/></svg></span>실시간 관심도</span>
@@ -19301,7 +19298,7 @@ function renderBrandTrimSection(){
       <div class="brand-pick-card${STATE.brandKey===b?' sel':''}${isTopBrandInCurrentGroup(b)?' is-popular-top':''}" data-brand="${b}" role="button" tabindex="0" aria-label="${BRAND_DISPLAY_FULL[b]} 트림 및 가격 보기, 선택 비중 ${getBrandSelectionPercent(b)}%">
           ${BRAND_STATUS_BADGES[b]?`<span class="brand-discontinued-badge">${BRAND_STATUS_BADGES[b]}</span>`:''}
         <span class="brand-pick-thumb">${imgSrc?`<img src="${imgSrc}" alt="">`:''}</span>
-        <span class="brand-pick-name">${b==='Tesla' ? 'Tesla Model Y<span class="brand-pick-subname">Longwheelbase</span>' : BRAND_DISPLAY_FULL[b]}${modelYearSuffix(brandModelYear(b))}</span>
+        <span class="brand-pick-name">${b==='Tesla' ? 'Tesla Model Y<span class="brand-pick-subname">Longwheelbase</span>' : BRAND_DISPLAY_FULL[b]}</span>
         <span class="brand-selection-share" data-brand-share="${b}">${getBrandSelectionPercent(b)}<small>%</small></span>
       </div>
     `);
@@ -19558,7 +19555,7 @@ if(score.priceDiff !== null){
   panel.innerHTML = `
     <div class="result-hero-slot">
     <div class="result-hero">
-      <div class="result-title">Volvo ${es90ResultLabel(es90Trim)}<span class="title-vs-badge">VS</span>${BRAND_ONLY[brandKey]||''} ${compLabel(compName, compTrim)}</div>
+      <div class="result-title">Volvo ES90 ${es90TrimDisplay(es90Trim)}<span class="title-vs-badge">VS</span>${BRAND_ONLY[brandKey]||''} ${compBaseLabel(compName, compTrim)}</div>
       <div class="result-badges">
         ${STATE.group==='direct'
           ? `<span class="rbadge rb-blue">E 세그먼트</span><span class="rbadge rb-teal">전기차</span><span class="rbadge rb-green">세단</span>`
