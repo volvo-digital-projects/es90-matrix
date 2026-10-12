@@ -17484,12 +17484,11 @@ const ES90_TRIM_DISPLAY = {
 function es90TrimDisplay(trim){ return ES90_TRIM_DISPLAY[trim] || trim; }
 function es90TrimMenuDisplay(trim){ return es90TrimDisplay(trim).replace('Extended Range','ER'); }
 function es90TrimCompact(trim){ return es90TrimDisplay(trim).replace('Single Motor Extended Range','Single Motor ER'); }
-function modelYearSuffix(modelYear){ return modelYear ? ` (${modelYear}년식)` : ''; }
-function es90ModelYear(trim){ return D.prices.ES90?.[trim]?.modelYear || 27; }
-function es90ModelLabel(prefix='ES90', trim=STATE.es90Trim){ return `${prefix}${modelYearSuffix(es90ModelYear(trim))}`; }
+// 연식은 가격 데이터 검증용으로 유지하되 고객용 모델명에는 표시하지 않는다.
+function es90ModelLabel(prefix='ES90', trim=STATE.es90Trim){ return prefix; }
 function es90TrimYearDisplay(trim, compact=false){
   const display = compact ? es90TrimMenuDisplay(trim) : es90TrimDisplay(trim);
-  return `${display}${modelYearSuffix(es90ModelYear(trim))}`;
+  return display;
 }
 function es90ResultLabel(trim, compact=false){
   return `ES90 ${es90TrimYearDisplay(trim, compact)}`;
@@ -17517,33 +17516,28 @@ function compTrimDisplay(trim){ return trim==='Model Y L' ? 'Model Y Longwheelba
 function compBrandKeyFromDisplayName(compName){
   return Object.keys(BRAND_DISPLAY).find(key=>BRAND_DISPLAY[key]===compName) || null;
 }
-function compModelYear(brandKey, compTrim){
-  return D.prices[brandKey]?.[compTrim]?.modelYear || null;
-}
 function compBaseLabel(compName, compTrim){
   if(compTrim==='EV' || compTrim==='Model Y L') return compName;
   return `${compName} ${compTrimDisplay(compTrim)}`;
 }
 // combines competitor brand display name + trim, omitting the trim when it's a generic/redundant label like 'EV'
 function compLabel(compName, compTrim){
-  const brandKey = compBrandKeyFromDisplayName(compName);
-  return `${compBaseLabel(compName, compTrim)}${modelYearSuffix(compModelYear(brandKey, compTrim))}`;
+  return compBaseLabel(compName, compTrim);
 }
 // 성능·옵션 비교 결과 카드에서만 6GT의 한정판 접미어를 생략한다.
 function resultCompLabel(compName, compTrim){
-  const brandKey = compBrandKeyFromDisplayName(compName);
   let label = compBaseLabel(compName, compTrim);
   if(String(compName).includes('6 Series GT')){
     label = label.replace(/^6 Series GT\s+/,'6 Series ').replace(/\s+Final Edition$/,'');
   }
-  return `${label}${modelYearSuffix(compModelYear(brandKey, compTrim))}`;
+  return label;
 }
 function fullCompTrimLabel(brandKey, compTrim){
   const fullName = BRAND_DISPLAY_FULL[brandKey] || BRAND_DISPLAY[brandKey] || brandKey;
   const label = (!compTrim || compTrim==='EV' || compTrim==='Model Y L' || fullName.toLowerCase().endsWith(String(compTrimDisplay(compTrim)).toLowerCase()))
     ? fullName
     : `${fullName} ${compTrimDisplay(compTrim)}`;
-  return `${label}${modelYearSuffix(compModelYear(brandKey, compTrim))}`;
+  return label;
 }
 
 // ES90 prices are displayed as exact current prices from the data source.
@@ -19570,7 +19564,7 @@ if(score.priceDiff !== null){
             <div class="hero-es-trim-select-wrap">
               <button type="button" class="hero-es-trim-trigger" aria-label="ES90 트림 변경" aria-haspopup="listbox" onclick="toggleEs90ResultTrimMenu(event)">
                 <span class="hero-es-trim-selected">
-                  <span class="hero-es-trim-selected-main">${(selectedEs90ResultTrim?.label||es90TrimMenuDisplay(es90Trim))+modelYearSuffix(es90ModelYear(es90Trim))}</span>
+                  <span class="hero-es-trim-selected-main">${selectedEs90ResultTrim?.label||es90TrimMenuDisplay(es90Trim)}</span>
                   ${selectedEs90ResultTrim?.suspensionLabel?`<span class="hero-es-trim-selected-sub">${selectedEs90ResultTrim.suspensionLabel}</span>`:''}
                 </span>
               </button>
@@ -19578,7 +19572,7 @@ if(score.priceDiff !== null){
                 ${ES90_RESULT_TRIM_OPTIONS.map(item=>{
                   const selectedAirSuspension = SELECTED_ES_AIR_SUSPENSION_TRIMS.has(item.trim);
                   const isSelected = item.trim===es90Trim && item.airSuspension===selectedAirSuspension;
-                  return `<button type="button" class="hero-es-trim-option${isSelected?' is-selected':''}" role="option" aria-selected="${isSelected}" onclick="selectEs90ResultTrim(event,'${item.trim}','${item.airSuspension?'air':'standard'}')"><span class="hero-es-trim-option-main">${item.label}${modelYearSuffix(es90ModelYear(item.trim))}</span>${item.suspensionLabel?`<span class="hero-es-trim-option-sub">${item.suspensionLabel}</span>`:''}</button>`;
+                  return `<button type="button" class="hero-es-trim-option${isSelected?' is-selected':''}" role="option" aria-selected="${isSelected}" onclick="selectEs90ResultTrim(event,'${item.trim}','${item.airSuspension?'air':'standard'}')"><span class="hero-es-trim-option-main">${item.label}</span>${item.suspensionLabel?`<span class="hero-es-trim-option-sub">${item.suspensionLabel}</span>`:''}</button>`;
                 }).join('')}
               </div>
             </div>
