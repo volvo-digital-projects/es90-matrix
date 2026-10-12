@@ -71,6 +71,7 @@ class UpdateGetchaPricesTests(unittest.TestCase):
                     "msrp": 100,
                     "promo": 10,
                     "discountedPrice": 90,
+                    "modelYear": 27,
                 }
             }
             unmatched = ["Tesla / Model Y L: exact match failed"]
@@ -97,12 +98,39 @@ class UpdateGetchaPricesTests(unittest.TestCase):
             self.assertEqual(matched["msrp"], 100)
             self.assertEqual(matched["promo"], 10)
             self.assertEqual(matched["discountedPrice"], 90)
+            self.assertEqual(matched["modelYear"], 27)
             self.assertEqual(matched["promotionCheckedAt"], checked_at)
+            self.assertRegex(checked_at, r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
             self.assertEqual(preserved["msrp"], 20)
             self.assertEqual(preserved["promotionCheckedAt"], "2026-10-01")
             self.assertEqual(state["matchedTrimCount"], 1)
             self.assertEqual(state["unmatchedTrimCount"], 1)
             self.assertEqual(state["unmatchedTrims"], unmatched)
+
+    def test_newest_section_uses_getcha_model_year(self) -> None:
+        sections = [
+            {"title": "테슬라 모델 Y (26년식)", "text": "old"},
+            {"title": "테슬라 모델 Y (27년식)", "text": "new"},
+        ]
+
+        selected = update_getcha_prices.newest_section(
+            sections, "테슬라 모델 Y"
+        )
+
+        self.assertEqual(selected["text"], "new")
+        self.assertEqual(update_getcha_prices.section_model_year(selected), 27)
+
+    def test_tesla_model_y_uses_latest_longwheelbase_grade(self) -> None:
+        self.assertIn(
+            (
+                "테슬라",
+                "테슬라 모델 Y",
+                "L 프리미엄 AWD",
+                "Tesla",
+                "Model Y L",
+            ),
+            update_getcha_prices.MATCHES,
+        )
 
 
 if __name__ == "__main__":

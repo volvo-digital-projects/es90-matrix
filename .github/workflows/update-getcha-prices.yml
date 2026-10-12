@@ -70,7 +70,7 @@ jobs:
           python -m pip install --disable-pip-version-check playwright==1.54.0
           python -m playwright install --with-deps chromium
 
-      - name: Check exact Getcha trims and prices
+      - name: Check exact Getcha trims, model years, and prices
         if: steps.daily.outputs.should_run == 'true'
         run: python scripts/update_getcha_prices.py
 

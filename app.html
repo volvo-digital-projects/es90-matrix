@@ -1970,31 +1970,36 @@ body.cover-open{overflow:hidden;background:#05070a;}
         "msrp": 72940000,
         "promo": 0,
         "subsidy": 0,
-        "total": 72940000
+        "total": 72940000,
+        "modelYear": 27
       },
       "Single Motor Ultra": {
         "msrp": 80550000,
         "promo": 0,
         "subsidy": 0,
-        "total": 80550000
+        "total": 80550000,
+        "modelYear": 27
       },
       "Twin Motor Plus": {
         "msrp": 79600000,
         "promo": 0,
         "subsidy": 0,
-        "total": 79600000
+        "total": 79600000,
+        "modelYear": 27
       },
       "Twin Motor Ultra": {
         "msrp": 87410000,
         "promo": 0,
         "subsidy": 0,
-        "total": 87410000
+        "total": 87410000,
+        "modelYear": 27
       },
       "Twin Motor Performance Ultra": {
         "msrp": 95410000,
         "promo": 0,
         "subsidy": 0,
-        "total": 95410000
+        "total": 95410000,
+        "modelYear": 27
       }
     },
     "Hyundai": {
@@ -17111,6 +17116,7 @@ const LEXUS_ES_GETCHA_CHECKED_AT = '2026-09-28';
 function lexusGetchaPrice(trim, msrp){
   return {
     msrp, promo:0, subsidy:0, total:msrp, discountedPrice:msrp,
+    modelYear:27,
     promotionSource:'Getcha', promotionCheckedAt:LEXUS_ES_GETCHA_CHECKED_AT,
     getchaMatchKey:`Lexus ES / ${trim}`
   };
@@ -17457,6 +17463,12 @@ const ES90_TRIM_DISPLAY = {
 function es90TrimDisplay(trim){ return ES90_TRIM_DISPLAY[trim] || trim; }
 function es90TrimMenuDisplay(trim){ return es90TrimDisplay(trim).replace('Extended Range','ER'); }
 function es90TrimCompact(trim){ return es90TrimDisplay(trim).replace('Single Motor Extended Range','Single Motor ER'); }
+function modelYearSuffix(modelYear){ return modelYear ? ` (${modelYear}년식)` : ''; }
+function es90ResultLabel(trim, compact=false){
+  const display = compact ? es90TrimMenuDisplay(trim) : es90TrimDisplay(trim);
+  const modelYear = D.prices.ES90?.[trim]?.modelYear;
+  return `ES90 ${display}${modelYearSuffix(modelYear)}`;
+}
 const ES90_TRIM_IMAGE_SOURCES = Object.freeze({
   plus:'assets/es90-trim-plus.webp?v=20260820-1',
   ultra:'assets/es90-trim-ultra.webp?v=20260820-1',
@@ -17477,22 +17489,39 @@ const ES90_TRIM_IMAGES_READY = Promise.all(Object.values(ES90_TRIM_IMAGE_SOURCES
     : new Promise(resolve=>{ image.onload=image.onerror=resolve; });
 }));
 function compTrimDisplay(trim){ return trim==='Model Y L' ? 'Model Y Longwheelbase' : trim; }
-// combines competitor brand display name + trim, omitting the trim when it's a generic/redundant label like 'EV'
-function compLabel(compName, compTrim){
+function compBrandKeyFromDisplayName(compName){
+  return Object.keys(BRAND_DISPLAY).find(key=>BRAND_DISPLAY[key]===compName) || null;
+}
+function compModelYear(brandKey, compTrim){
+  return D.prices[brandKey]?.[compTrim]?.modelYear || null;
+}
+function brandModelYear(brandKey){
+  return Object.values(D.prices[brandKey]||{}).map(price=>price?.modelYear).find(Boolean) || null;
+}
+function compBaseLabel(compName, compTrim){
   if(compTrim==='EV' || compTrim==='Model Y L') return compName;
   return `${compName} ${compTrimDisplay(compTrim)}`;
 }
+// combines competitor brand display name + trim, omitting the trim when it's a generic/redundant label like 'EV'
+function compLabel(compName, compTrim){
+  const brandKey = compBrandKeyFromDisplayName(compName);
+  return `${compBaseLabel(compName, compTrim)}${modelYearSuffix(compModelYear(brandKey, compTrim))}`;
+}
 // 성능·옵션 비교 결과 카드에서만 6GT의 한정판 접미어를 생략한다.
 function resultCompLabel(compName, compTrim){
-  const label = compLabel(compName, compTrim);
-  return String(compName).includes('6 Series GT')
-    ? label.replace(/^6 Series GT\s+/,'6 Series ').replace(/\s+Final Edition$/,'')
-    : label;
+  const brandKey = compBrandKeyFromDisplayName(compName);
+  let label = compBaseLabel(compName, compTrim);
+  if(String(compName).includes('6 Series GT')){
+    label = label.replace(/^6 Series GT\s+/,'6 Series ').replace(/\s+Final Edition$/,'');
+  }
+  return `${label}${modelYearSuffix(compModelYear(brandKey, compTrim))}`;
 }
 function fullCompTrimLabel(brandKey, compTrim){
   const fullName = BRAND_DISPLAY_FULL[brandKey] || BRAND_DISPLAY[brandKey] || brandKey;
-  if(!compTrim || compTrim==='EV' || compTrim==='Model Y L' || fullName.toLowerCase().endsWith(String(compTrimDisplay(compTrim)).toLowerCase())) return fullName;
-  return `${fullName} ${compTrimDisplay(compTrim)}`;
+  const label = (!compTrim || compTrim==='EV' || compTrim==='Model Y L' || fullName.toLowerCase().endsWith(String(compTrimDisplay(compTrim)).toLowerCase()))
+    ? fullName
+    : `${fullName} ${compTrimDisplay(compTrim)}`;
+  return `${label}${modelYearSuffix(compModelYear(brandKey, compTrim))}`;
 }
 
 // ES90 prices are displayed as exact current prices from the data source.
@@ -18542,7 +18571,7 @@ async function syncDeploymentUpdatedAt(){
     const matrixUpdatedAt = formatDeploymentUpdatedAt(versionInfo.matrixUpdatedAt);
     if(!matrixUpdatedAt) return;
     D.meta.updated = matrixUpdatedAt;
-    const competitorPriceCheckedAt = formatDeploymentUpdatedAt(versionInfo.competitorPriceCheckedAt)?.slice(0,10);
+    const competitorPriceCheckedAt = formatDeploymentUpdatedAt(versionInfo.competitorPriceCheckedAt);
     if(competitorPriceCheckedAt){
       Object.values(D.prices['Lexus ES']||{}).forEach(price=>{
         price.promotionCheckedAt = competitorPriceCheckedAt;
@@ -19194,7 +19223,7 @@ function renderStep2(){
         <div class="group-sub">${g.desc}</div>
         <div class="group-brand-list">
           <div class="group-sort-note">A·B·C 순</div>
-          ${g.brands.map(b=>`<div class="group-brand-row"><span class="logo-badge"></span><span>${BRAND_DISPLAY_FULL[b]}${b==='Lexus ES'?'<span class="group-new-badge">NEW</span>':b==='Tesla Model S'?' <span style="color:var(--ink-faint);font-weight:500;">(2026년 6월 단종)</span>':b==='BMW 6 Series GT'?' <span style="color:var(--ink-faint);font-weight:500;">(2024년 12월 단종)</span>':''}</span></div>`).join('')}
+          ${g.brands.map(b=>`<div class="group-brand-row"><span class="logo-badge"></span><span>${BRAND_DISPLAY_FULL[b]}${modelYearSuffix(brandModelYear(b))}${b==='Lexus ES'?'<span class="group-new-badge">NEW</span>':b==='Tesla Model S'?' <span style="color:var(--ink-faint);font-weight:500;">(2026년 6월 단종)</span>':b==='BMW 6 Series GT'?' <span style="color:var(--ink-faint);font-weight:500;">(2024년 12월 단종)</span>':''}</span></div>`).join('')}
         </div>
         <div class="group-selection-share" aria-label="${g.name} 선택 비율 ${getGroupSelectionPercent(key)}%">
           <span class="group-selection-label"><span class="group-selection-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.8" stroke="currentColor" stroke-width="1.8"/></svg></span>실시간 관심도</span>
@@ -19247,7 +19276,7 @@ function renderBrandTrimSection(){
       <div class="brand-pick-card${STATE.brandKey===b?' sel':''}${isTopBrandInCurrentGroup(b)?' is-popular-top':''}" data-brand="${b}" role="button" tabindex="0" aria-label="${BRAND_DISPLAY_FULL[b]} 트림 및 가격 보기, 선택 비중 ${getBrandSelectionPercent(b)}%">
           ${BRAND_STATUS_BADGES[b]?`<span class="brand-discontinued-badge">${BRAND_STATUS_BADGES[b]}</span>`:''}
         <span class="brand-pick-thumb">${imgSrc?`<img src="${imgSrc}" alt="">`:''}</span>
-        <span class="brand-pick-name">${b==='Tesla' ? 'Tesla Model Y<span class="brand-pick-subname">Longwheelbase</span>' : BRAND_DISPLAY_FULL[b]}</span>
+        <span class="brand-pick-name">${b==='Tesla' ? 'Tesla Model Y<span class="brand-pick-subname">Longwheelbase</span>' : BRAND_DISPLAY_FULL[b]}${modelYearSuffix(brandModelYear(b))}</span>
         <span class="brand-selection-share" data-brand-share="${b}">${getBrandSelectionPercent(b)}<small>%</small></span>
       </div>
     `);
@@ -19363,7 +19392,7 @@ function buildPriceGapHtml(esTotal, compPrice, es90Trim, compName, fallbackLabel
     const checkedAt = promotion.checkedAt || '';
     promotionHtml = `
       <div class="price-gap-promo">
-        <span class="price-gap-promo-source" title="Getcha 가격 확인일 ${checkedAt}">
+        <span class="price-gap-promo-source" title="Getcha 가격 확인 시각 ${checkedAt}">
           <span class="price-gap-promo-source-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke-width="1.8"/><path d="M12 7.5V12l3.2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <span class="price-gap-promo-source-brand">GETCHA</span><span class="price-gap-promo-source-label">UPDATE</span><span class="price-gap-promo-source-time">${checkedAt} 기준</span>
         </span>
@@ -19375,7 +19404,7 @@ function buildPriceGapHtml(esTotal, compPrice, es90Trim, compName, fallbackLabel
   }
   return `
     <div class="price-gap-banner">
-      <div class="price-gap-trim"><span>ES90 ${es90TrimMenuDisplay(es90Trim)}</span>가 ${displayCompName} 대비</div>
+      <div class="price-gap-trim"><span>${es90ResultLabel(es90Trim,true)}</span>가 ${displayCompName} 대비</div>
       <div class="price-gap-main"><span class="price-gap-amount" aria-label="${absAmt}">${animatedAbsAmt}</span><span class="price-gap-pct">(${esCheaper?'▼':'▲'} ${pct}%)</span> ${gapLabel}</div>
       <div class="price-gap-conditions" aria-label="가격 비교 적용 조건">
         <span class="price-gap-condition"><span class="price-gap-condition-icon" aria-hidden="true">◇</span>출고가 기준</span>
@@ -19504,7 +19533,7 @@ if(score.priceDiff !== null){
   panel.innerHTML = `
     <div class="result-hero-slot">
     <div class="result-hero">
-      <div class="result-title">Volvo ES90 ${es90TrimDisplay(es90Trim)}<span class="title-vs-badge">VS</span>${BRAND_ONLY[brandKey]||''} ${compLabel(compName, compTrim)}</div>
+      <div class="result-title">Volvo ${es90ResultLabel(es90Trim)}<span class="title-vs-badge">VS</span>${BRAND_ONLY[brandKey]||''} ${compLabel(compName, compTrim)}</div>
       <div class="result-badges">
         ${STATE.group==='direct'
           ? `<span class="rbadge rb-blue">E 세그먼트</span><span class="rbadge rb-teal">전기차</span><span class="rbadge rb-green">세단</span>`
@@ -19586,7 +19615,7 @@ if(score.priceDiff !== null){
         </div>
         ${(()=>{
           const optionGap = Math.abs(score.esTotal-score.compTotal);
-          const optionWinner = score.esTotal===score.compTotal ? '동일' : (score.esTotal>score.compTotal ? `ES90 ${es90TrimMenuDisplay(es90Trim)}` : resultCompLabel(compName, compTrim));
+          const optionWinner = score.esTotal===score.compTotal ? '동일' : (score.esTotal>score.compTotal ? es90ResultLabel(es90Trim,true) : resultCompLabel(compName, compTrim));
           const esH = Math.max(score.maxTotal? score.esTotal/score.maxTotal*100:0, 6);
           const compH = Math.max(score.maxTotal? score.compTotal/score.maxTotal*100:0, 6);
           return `
@@ -19613,7 +19642,7 @@ if(score.priceDiff !== null){
       </div>
       <div class="category-card-footer">
         <div class="vbar-legend">
-          <span><div class="leg-dot" style="background:var(--navy);"></div>ES90 ${es90TrimMenuDisplay(es90Trim)}</span>
+          <span><div class="leg-dot" style="background:var(--navy);"></div>${es90ResultLabel(es90Trim,true)}</span>
           <span><div class="leg-dot" style="background:#c3cad2;"></div>${compLabel(compName, compTrim)}</span>
         </div>
       </div>
@@ -19638,11 +19667,11 @@ if(score.priceDiff !== null){
     <div class="card" id="optionAnalysisCard">
       <div class="card-title"><span class="ci">4</span>옵션분석</div>
       <div class="diff-table-wrap" style="margin-bottom:14px;">
-        <div class="diff-table-head"><span class="trim-highlight">ES90 ${es90TrimMenuDisplay(es90Trim)}</span> <span class="head-plain">강점사항</span> <span class="trim-highlight">(${pros.length})</span></div>
+        <div class="diff-table-head"><span class="trim-highlight">${es90ResultLabel(es90Trim,true)}</span> <span class="head-plain">강점사항</span> <span class="trim-highlight">(${pros.length})</span></div>
         ${renderCatOptionCards(pros, 'pro')}
       </div>
       <div class="pc-box">
-        <div class="pc-head"><span class="trim-highlight">ES90 ${es90TrimMenuDisplay(es90Trim)}</span> <span class="head-plain">보완사항</span> <span class="trim-highlight">(${cons.length})</span></div>
+        <div class="pc-head"><span class="trim-highlight">${es90ResultLabel(es90Trim,true)}</span> <span class="head-plain">보완사항</span> <span class="trim-highlight">(${cons.length})</span></div>
         ${renderCatOptionCards(cons, 'con')}
       </div>
       <div id="upgradeOptBox"></div>
@@ -19935,14 +19964,14 @@ function renderSpecCompare(esSpec, compSpec, compName, es90Trim, compTrim, brand
   const winCountGap = Math.abs(esWins-compWins);
   const winnerTrimLabel = esWins===compWins
     ? '동일'
-    : (esWins>compWins ? `ES90 ${es90TrimMenuDisplay(es90Trim)}` : resultCompLabel(compName, compTrim));
+    : (esWins>compWins ? es90ResultLabel(es90Trim,true) : resultCompLabel(compName, compTrim));
   const esH = Math.max(esWins/total*100, 6), compH = Math.max(compWins/total*100, 6);
 
   return `
     <div class="spec-compare-wrap">
       <div class="spec-table-column">
       <div class="table-scroll"><table class="opt-table spec-table">
-        <thead><tr><th>항목</th><th>ES90 ${es90TrimMenuDisplay(es90Trim)}</th><th>${compLabel(compName, compTrim)}</th></tr></thead>
+        <thead><tr><th>항목</th><th>${es90ResultLabel(es90Trim,true)}</th><th>${compLabel(compName, compTrim)}</th></tr></thead>
         <tbody>
           ${rows.map((r,i)=>{
             const excludedCls = i>=coreRows.length ? ' spec-excluded' : '';
@@ -19961,7 +19990,7 @@ function renderSpecCompare(esSpec, compSpec, compName, es90Trim, compTrim, brand
         </tbody>
       </table>
       <div class="vbar-legend">
-        <span><div class="leg-dot" style="background:var(--navy);"></div>ES90 ${es90TrimMenuDisplay(es90Trim)}</span>
+        <span><div class="leg-dot" style="background:var(--navy);"></div>${es90ResultLabel(es90Trim,true)}</span>
         <span><div class="leg-dot" style="background:#c3cad2;"></div>${compLabel(compName, compTrim)}</span>
       </div>
       </div>
@@ -20395,7 +20424,7 @@ function renderOptTable(cat){
   }
 
   table.innerHTML = `
-    <thead><tr><th>옵션 항목</th><th class="center">ES90 ${es90TrimMenuDisplay(STATE.es90Trim)}</th><th class="center">${compLabel(compName, STATE.compTrim)}</th></tr></thead>
+    <thead><tr><th>옵션 항목</th><th class="center">${es90ResultLabel(STATE.es90Trim,true)}</th><th class="center">${compLabel(compName, STATE.compTrim)}</th></tr></thead>
     <tbody>
       ${orderedItems.map(it=>{
         const evTrue = it.es90===true;

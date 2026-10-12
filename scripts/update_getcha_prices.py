@@ -37,12 +37,19 @@ MATCHES = [
     ("폴스타", "폴스타 폴스타 4", "듀얼 모터", "Polestar 4", "Dual motor"),
     ("테슬라", "테슬라 모델 S", "AWD", "Tesla Model S", "AWD"),
     ("테슬라", "테슬라 모델 S", "플래드", "Tesla Model S", "Plaid"),
-    ("테슬라", "테슬라 모델 Y", "L AWD", "Tesla", "Model Y L"),
+    ("테슬라", "테슬라 모델 Y", "L 프리미엄 AWD", "Tesla", "Model Y L"),
 ]
 
 
 def normalize(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
+
+
+def section_model_year(section: dict) -> int:
+    match = re.search(r"\((\d{2})년식\)", section["title"])
+    if not match:
+        raise RuntimeError(f"Getcha model year not found: {section['title']}")
+    return int(match.group(1))
 
 
 def newest_section(sections: list[dict], model_label: str) -> dict:
@@ -54,11 +61,7 @@ def newest_section(sections: list[dict], model_label: str) -> dict:
     if not candidates:
         raise RuntimeError(f"Getcha model not found: {model_label}")
 
-    def model_year(section: dict) -> int:
-        match = re.search(r"\((\d{2})년식\)", section["title"])
-        return int(match.group(1)) if match else -1
-
-    return max(candidates, key=model_year)
+    return max(candidates, key=section_model_year)
 
 
 def parse_exact_price(section_text: str, exact_trim: str) -> dict:
@@ -226,9 +229,11 @@ def read_getcha_prices() -> tuple[dict[tuple[str, str], dict], list[str]]:
             ) in brand_matches:
                 try:
                     section = newest_section(sections, getcha_model)
-                    collected[(app_model, app_trim)] = parse_exact_price(
+                    observed = parse_exact_price(
                         section["text"], getcha_trim
                     )
+                    observed["modelYear"] = section_model_year(section)
+                    collected[(app_model, app_trim)] = observed
                 except Exception as error:
                     unmatched.append(
                         f"{app_model} / {app_trim}: exact match failed ({error})"
@@ -253,7 +258,7 @@ def update_app(
         raise RuntimeError("window.ES90_DATA was not found in app.html")
 
     data = json.loads(match.group(1))
-    checked_at = datetime.now(SEOUL).date().isoformat()
+    checked_at = datetime.now(SEOUL).strftime("%Y-%m-%d %H:%M")
     changed_prices: list[str] = []
 
     for (model, trim), observed in prices.items():
@@ -264,11 +269,13 @@ def update_app(
             int(target["msrp"]),
             int(target.get("promo", 0)),
             int(target.get("discountedPrice", target["msrp"])),
+            target.get("modelYear"),
         )
         new_values = (
             observed["msrp"],
             observed["promo"],
             observed["discountedPrice"],
+            observed["modelYear"],
         )
         if old_values != new_values:
             changed_prices.append(f"{model} / {trim}")
@@ -276,6 +283,7 @@ def update_app(
             target["promo"] = observed["promo"]
             target["total"] = observed["msrp"]
             target["discountedPrice"] = observed["discountedPrice"]
+            target["modelYear"] = observed["modelYear"]
         target["promotionSource"] = "Getcha"
         target["promotionCheckedAt"] = checked_at
         target["getchaMatchKey"] = f"{model} / {trim}"
