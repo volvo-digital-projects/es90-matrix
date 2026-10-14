@@ -17122,8 +17122,7 @@ body.cover-open{overflow:hidden;background:#05070a;}
 // ============================================================
 const D = window.ES90_DATA;
 
-// Lexus Korea all-new ES pre-launch data (2026-09-26 article; technical figures
-// supplemented by Lexus official global/European specifications). Existing ES90 data is unchanged.
+// Lexus Korea all-new ES trim data. Existing ES90 data is unchanged.
 const LEXUS_ES_TRIMS = Object.freeze([
   '350e Premium', '350e Luxury', '350e VIP', '500e Premium', '500e Luxury'
 ]);
@@ -17152,13 +17151,13 @@ D.prices['Lexus ES'] = {
 D.specs['Lexus ES'] = Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>{
   const is350e = trim.startsWith('350e');
   return [trim, {
-    battery_kwh:74.7,
+    battery_kwh:74.69,
     battery_maker:null,
     range_km:is350e?478:(trim==='500e Premium'?435:415),
     power_ps:is350e?227:347,
-    torque_kgm:null,
+    torque_kgm:is350e?27.3:44.7,
     accel_0_100:is350e?8.0:5.5,
-    trunk_l:'441 확인 불가',
+    trunk_l:517,
     warranty_basic:'확인 불가',
     warranty_battery:'확인 불가',
     drive_type:is350e?'전륜구동':'DIRECT4 4륜구동'
@@ -17166,7 +17165,7 @@ D.specs['Lexus ES'] = Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>{
 }));
 D.packages['Lexus ES'] = [];
 D.body_colors['Lexus ES'] = {
-  count:Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>[trim,null])),
+  count:Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>[trim,7])),
   paid:[]
 };
 D.wheel_options['Lexus ES'] = [];
@@ -17185,16 +17184,65 @@ function setLexusComparisonValues(itemName, values){
     if(item){ item.competitor = values; return; }
   }
 }
-setLexusComparisonValues('배터리 용량 (kWh)', lexusTrimValues('74.7kWh','74.7kWh'));
-setLexusComparisonValues('모터 최고 출력 (kW)', lexusTrimValues('165kW','252kW'));
-setLexusComparisonValues('구동 방식', lexusTrimValues('전륜구동','DIRECT4 4륜구동'));
-setLexusComparisonValues('14.5인치 터치 스크린 센터 디스플레이', lexusTrimValues(true));
-setLexusComparisonValues('19인치', Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>[
-  trim, trim==='500e Luxury' ? '확인 불가' : '235/55R19'
-])));
-setLexusComparisonValues('21인치', Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>[
-  trim, trim==='500e Luxury' ? '235/45R21' : '확인 불가'
-])));
+const LEXUS_ES_ALL_TRUE_ITEMS = [
+  '전방 충돌 경보 및 긴급제동 서포트','차선 유지 보조','운전자 경고 시스템','도로 이탈 방지 및 보호',
+  '스티어링 어시스트','도어 개방 경보','사각지대 경보 및 조향 어시스트','교차로 경보 및 긴급제동 서포트',
+  '후측방 경보 및 후방 추돌 경고','파일럿 어시스트','어댑티브 크루즈 컨트롤','앞좌석 에어백',
+  '운전석 무릎 에어백','사이드 에어백 및 커튼형 에어백','안전벨트 프리텐셔너','뒷좌석 (좌/우) ISOFIX',
+  '실내 승객 감지 시스템','파크 어시스트 센서 (전/후방)','투어링 섀시','힐 스타트 어시스트',
+  '이중 접합 라미네이티드 윈도','눈부심 방지 룸 미러 & 아웃사이드 미러 (운전석)',
+  '전동식 3-스포크 스티어링 휠','스티어링 휠 히팅','테일러드 인스트루먼트 패널 마감',
+  '앞좌석 전동 시트 및 운전석 프로필 연동','앞좌석 전동 럼버 서포트','앞좌석 열선시트','앞좌석 통풍시트',
+  '인테리어 일루미네이션 - 하이 레벨','실내 공기 청정 시스템','히트펌프','볼보 어시스턴스',
+  '스마트폰 인테그레이션','USB 포트','블루투스','스마트폰 무선충전','타이어 공기압 모니터링 시스템',
+  '전동식 트렁크','비상용 삼각대','12V 아웃렛','타이어 리페어 키트'
+];
+const LEXUS_ES_ALL_ABSENT_ITEMS = [
+  '거리 경보','앞좌석 경추 보호 시트','에어 서스펜션 및 액티브 섀시','경사로 감속 주행 장치',
+  '플러시 도어 핸들','블랙 사이드미러 커버','크롬 패키지','Nordico 시트','천연 가죽 시트',
+  '앞좌석 수동 쿠션 익스텐션','앞좌석 전동 사이드 서포트 및 마사지','뒷좌석 폴딩시트',
+  '4-구역 독립 온도 조절 시스템','일렉트로크로믹 글라스 루프','Bowers & Wilkins 프리미엄 사운드 시스템',
+  '앞좌석 헤드레스트 스피커','NFC 스마트 카드 키','디지털 키 플러스','18인치','20인치','22인치',
+  '로드커버','프렁크 용량'
+];
+LEXUS_ES_ALL_TRUE_ITEMS.forEach(item=>setLexusComparisonValues(item,lexusTrimValues(true)));
+LEXUS_ES_ALL_ABSENT_ITEMS.forEach(item=>setLexusComparisonValues(item,lexusTrimValues(null)));
+
+const lexusPremiumLuxuryValues = (premiumValue,luxuryValue,includeVip=true)=>({
+  '350e Premium':premiumValue,
+  '350e Luxury':luxuryValue,
+  '350e VIP':includeVip?luxuryValue:premiumValue,
+  '500e Premium':premiumValue,
+  '500e Luxury':luxuryValue
+});
+setLexusComparisonValues('파크 파일럿 어시스트',lexusPremiumLuxuryValues(null,true));
+setLexusComparisonValues('파크 어시스트 센서 (측방) 및 360도 카메라',lexusPremiumLuxuryValues(null,true));
+setLexusComparisonValues('배터리 용량 (kWh)',lexusTrimValues('74.69kWh'));
+setLexusComparisonValues('모터 최고 출력 (kW)',lexusTrimValues('167kW','255kW'));
+setLexusComparisonValues('구동 방식',lexusTrimValues('전륜구동','4륜구동'));
+setLexusComparisonValues('LED 헤드램프',lexusPremiumLuxuryValues(true,null));
+setLexusComparisonValues('High-Definition Pixel 헤드램프',lexusPremiumLuxuryValues(null,true));
+setLexusComparisonValues('소프트 도어 클로징',lexusPremiumLuxuryValues(null,true));
+setLexusComparisonValues('인조 가죽 시트',lexusPremiumLuxuryValues(true,null));
+setLexusComparisonValues('Nappa 가죽 시트',lexusPremiumLuxuryValues(null,'세미 아닐린 가죽 시트'));
+setLexusComparisonValues('뒷좌석 전동 시트',{
+  '350e Premium':null,'350e Luxury':null,'350e VIP':true,'500e Premium':null,'500e Luxury':null
+});
+setLexusComparisonValues('파노라믹 글라스 루프',lexusTrimValues('와이드 선루프'));
+setLexusComparisonValues('9인치 운전자 디스플레이',lexusTrimValues('12.3인치'));
+setLexusComparisonValues('14.5인치 터치 스크린 센터 디스플레이',lexusTrimValues('14인치'));
+setLexusComparisonValues('헤드 업 디스플레이',lexusPremiumLuxuryValues(null,true));
+setLexusComparisonValues('기본 사운드 시스템',lexusPremiumLuxuryValues('렉서스 프리미엄 오디오 (10개 스피커)',null));
+setLexusComparisonValues('Bose 프리미엄 사운드 시스템',lexusPremiumLuxuryValues(null,'마크 레빈슨 프리미엄 사운드 시스템 (17개 스피커)'));
+setLexusComparisonValues('19인치',{
+  '350e Premium':'235/55R19','350e Luxury':'235/55R19','350e VIP':'235/55R19',
+  '500e Premium':'235/55R19','500e Luxury':null
+});
+setLexusComparisonValues('21인치',{
+  '350e Premium':null,'350e Luxury':null,'350e VIP':null,'500e Premium':null,'500e Luxury':'235/45R21'
+});
+setLexusComparisonValues('가정용 충전 케이블',lexusTrimValues('확인 불가'));
+setLexusComparisonValues('트렁크 용량 (폴딩여부 표기)',lexusTrimValues('517L'));
 D.brands['Lexus ES'] = {
   label:'Lexus ES',
   trims:[...LEXUS_ES_TRIMS],
@@ -19665,7 +19713,6 @@ if(score.priceDiff !== null){
             </div>
           </div>`;
         })()}
-        ${brandKey==='Lexus ES'?'<div class="lexus-update-overlay" role="status" aria-label="렉서스 ES 옵션 정보 추후 업데이트 예정">추후 업데이트 예정</div>':''}
       </div>
       <div class="category-card-footer">
         <div class="vbar-legend">
