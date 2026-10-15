@@ -18561,13 +18561,13 @@ const RESERVATION_DATA = {
   total: 3260,
   previousDayTotal: 3264,
   byTrim: [
-    {trim:'Single Motor Ultra', count:1705, airSuspension:true},
+    {trim:'Single Motor Ultra', count:1706, airSuspension:true},
     {trim:'Twin Motor Ultra', count:1199, airSuspension:true},
     {trim:'Twin Motor Performance Ultra', count:139},
     {trim:'Single Motor Ultra', count:99, airSuspension:false, variant:'No Air Sus'},
     {trim:'Single Motor Plus', count:66},
     {trim:'Twin Motor Ultra', count:32, airSuspension:false, variant:'No Air Sus'},
-    {trim:'Twin Motor Plus', count:20}
+    {trim:'Twin Motor Plus', count:19}
   ]
 };
 const BRAND_STATUS_BADGES = {
@@ -18615,7 +18615,7 @@ function syncLoginUpdateStamp(){
   time.textContent = `${updatedAt} 기준`;
   badge.setAttribute('aria-label', `업데이트 ${updatedAt} 기준`);
 }
-let RESERVATION_UPDATED_AT = '2026-10-15 10:16';
+let RESERVATION_UPDATED_AT = '2026-10-15 11:16';
 function formatDeploymentUpdatedAt(value){
   const date = new Date(value);
   if(Number.isNaN(date.getTime())) return null;
