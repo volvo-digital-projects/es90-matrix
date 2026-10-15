@@ -17151,14 +17151,14 @@ D.specs['Lexus ES'] = Object.fromEntries(LEXUS_ES_TRIMS.map(trim=>{
   const is350e = trim.startsWith('350e');
   return [trim, {
     battery_kwh:74.69,
-    battery_maker:null,
+    battery_maker:'CATL',
     range_km:is350e?478:(trim==='500e Premium'?435:415),
     power_ps:is350e?227:347,
     torque_kgm:is350e?27.3:44.7,
     accel_0_100:is350e?8.0:5.5,
     trunk_l:517,
-    warranty_basic:'확인 불가',
-    warranty_battery:'확인 불가',
+    warranty_basic:'4년/100,000km',
+    warranty_battery:'10년/200,000km',
     drive_type:is350e?'전륜구동':'DIRECT4 4륜구동'
   }];
 }));
