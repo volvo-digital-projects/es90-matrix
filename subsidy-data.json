@@ -5,7 +5,7 @@
     "paymentUrl": "https://ev.or.kr/nportal/buySupprt/initSubsidyPaymentCheckAction.do",
     "priceUrl": "https://ev.or.kr/nportal/buySupprt/initPsLocalCarPirceAction.do"
   },
-  "checkedAt": "2026-10-17T14:04:29+09:00",
+  "checkedAt": "2026-10-17T17:04:37+09:00",
   "year": 2026,
   "vehicleType": "전기승용",
   "allocationBasis": "전기승용 전체",
@@ -72,9 +72,9 @@
       "sigungu": "부산광역시",
       "announced": 8629,
       "received": 9375,
-      "selected": 7785,
+      "selected": 7831,
       "delivered": 7330,
-      "selectionRemaining": 844,
+      "selectionRemaining": 798,
       "remaining": 1299,
       "nationalMaxManwon": 648,
       "localMaxManwon": 194,
@@ -83,11 +83,11 @@
       "applicationDeadline": "2026.12.11 18:00",
       "notice": "본공고 1 / 본공고 2 / 본공고 3",
       "selectionBreakdown": {
-        "general": 4306,
-        "priority": 2288,
-        "taxi": 1028,
-        "corporate": 163,
-        "total": 7785
+        "general": 4334,
+        "priority": 2296,
+        "taxi": 1037,
+        "corporate": 164,
+        "total": 7831
       }
     },
     {
@@ -2585,10 +2585,10 @@
       "sigungu": "산청군",
       "announced": 190,
       "received": 109,
-      "selected": 102,
-      "delivered": 97,
-      "selectionRemaining": 88,
-      "remaining": 93,
+      "selected": 101,
+      "delivered": 96,
+      "selectionRemaining": 89,
+      "remaining": 94,
       "nationalMaxManwon": 648,
       "localMaxManwon": 195,
       "combinedMaxManwon": 843,
