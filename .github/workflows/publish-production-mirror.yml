@@ -1,6 +1,9 @@
 name: Publish production mirror
 
 on:
+  schedule:
+    # Reconcile a missed push or a temporarily failed Pages deployment.
+    - cron: "*/15 * * * *"
   push:
     branches:
       - main
@@ -34,7 +37,7 @@ jobs:
       github.repository == 'volvo-digital-projects/es90-matrix' &&
       (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Check out canonical repository
@@ -61,4 +64,27 @@ jobs:
             echo "Production contains commits missing from canonical main; stopping to prevent data loss." >&2
             exit 1
           fi
+          echo "PRODUCTION_BEFORE_SHA=$(git rev-parse production/main)" >> "$GITHUB_ENV"
           git push production HEAD:main
+
+      - name: Verify production mirror commit
+        run: |
+          expected="$(git rev-parse HEAD)"
+          actual="$(git ls-remote production refs/heads/main | cut -f1)"
+          if [ "$actual" != "$expected" ]; then
+            git fetch production main
+            if git merge-base --is-ancestor "$expected" production/main; then
+              echo "A newer canonical commit has already reached production; its run will verify Pages."
+              echo "SKIP_PUBLIC_VERIFY=true" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            echo "Production mirror SHA mismatch: expected=$expected actual=$actual" >&2
+            exit 1
+          fi
+
+      - name: Verify public GitHub Pages files
+        if: env.SKIP_PUBLIC_VERIFY != 'true'
+        run: |
+          python scripts/verify_production_pages.py \
+            --base-sha "$PRODUCTION_BEFORE_SHA" \
+            --commit "$(git rev-parse HEAD)"

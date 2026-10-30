@@ -150,6 +150,15 @@ class UpdateGetchaPricesTests(unittest.TestCase):
             "350e Premium", "350e Luxury", "350e VIP", "500e Premium", "500e Luxury"
         })
 
+    def test_lexus_price_without_discount_keeps_price_and_zero_promo(self) -> None:
+        observed = update_getcha_prices.parse_exact_price(
+            "ES 500e 프리미엄 (2026.09) 7,700 만원 - -",
+            "ES 500e 프리미엄",
+        )
+        self.assertEqual(observed, {
+            "msrp": 77000000, "promo": 0, "discountedPrice": 77000000
+        })
+
     def test_lexus_matched_trim_updates_without_stamping_unmatched_trim(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

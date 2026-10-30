@@ -19463,9 +19463,11 @@ function buildPriceGapHtml(esTotal, compPrice, es90Trim, compName, fallbackLabel
           <span class="price-gap-promo-source-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke-width="1.8"/><path d="M12 7.5V12l3.2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <span class="price-gap-promo-source-brand">GETCHA</span><span class="price-gap-promo-source-label">UPDATE</span><span class="price-gap-promo-source-time">${checkedAt} 기준</span>
         </span>
-        <span><strong>${fmtWon(promotion.discountedPrice)}</strong> 기준</span>
-        <span>가격차 <strong>${fmtWon(Math.abs(promoDiff))}</strong> (${promoDiff>0?'▼':'▲'} ${promoPct}%)</span>
-        <span class="price-gap-promo-result">${promoLabel}</span>
+        ${promotion.hasDiscount?`
+          <span><strong>${fmtWon(promotion.discountedPrice)}</strong> 기준</span>
+          <span>가격차 <strong>${fmtWon(Math.abs(promoDiff))}</strong> (${promoDiff>0?'▼':'▲'} ${promoPct}%)</span>
+          <span class="price-gap-promo-result">${promoLabel}</span>
+        `:`<span><strong>${fmtWon(promotion.listPrice)}</strong> 출고가 기준</span><span class="price-gap-promo-result">할인정보 없음</span>`}
         <span class="price-gap-promo-note"><span aria-hidden="true">ⓘ</span>비공식 참고가 · 실제 계약가와 다를 수 있음</span>
       </div>`;
   }
