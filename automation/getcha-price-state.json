@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-30T00:05:46+09:00",
-  "expectedTrimCount": 21,
-  "matchedTrimCount": 17,
+  "checkedAt": "2026-10-30T13:23:16+09:00",
+  "expectedTrimCount": 26,
+  "matchedTrimCount": 22,
   "unmatchedTrimCount": 4,
   "unmatchedTrims": [
     "BMW i5 / eDrive40 M Sport: exact match failed (Exact Getcha trim price match failed: eDrive 40 M 스포츠 P2 (0 matches); section='등급명 출고가 할인가 최대 할인 xDrive 40 M 스포츠 (2026.10) 10,600 만원 - - xDrive 40 M 스포츠 프로 (2026.10) 10,810 만원 - -')",
@@ -9,11 +9,6 @@
     "BMW i5 / xDrive40 M Sport Pro: exact match failed (Exact Getcha trim price match failed: xDrive 40 M 스포츠 프로 P2 (0 matches); section='등급명 출고가 할인가 최대 할인 xDrive 40 M 스포츠 (2026.10) 10,600 만원 - - xDrive 40 M 스포츠 프로 (2026.10) 10,810 만원 - -')",
     "BMW i5 / M60 xDrive Pro: exact match failed (Exact Getcha trim price match failed: M60 xDrive 프로 P2 (0 matches); section='등급명 출고가 할인가 최대 할인 xDrive 40 M 스포츠 (2026.10) 10,600 만원 - - xDrive 40 M 스포츠 프로 (2026.10) 10,810 만원 - -')"
   ],
-  "priceChangedTrimCount": 4,
-  "priceChangedTrims": [
-    "Hyundai / Premium",
-    "Hyundai / Exclusive",
-    "Hyundai / Calligraphy",
-    "Hyundai / Black Ink"
-  ]
+  "priceChangedTrimCount": 0,
+  "priceChangedTrims": []
 }

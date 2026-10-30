@@ -30,6 +30,11 @@ MATCHES = [
     ("BMW", "BMW iX3", "50 xDrive M 스포츠", "BMW iX3", "50 xDrive M Sport"),
     ("BMW", "BMW iX3", "50 xDrive M 스포츠 프로", "BMW iX3", "50 xDrive M Sport Pro"),
     ("벤츠", "벤츠 EQE", "EQE 350 +", "Mercedes-Benz", "350+"),
+    ("렉서스", "렉서스 ES", "ES 350e 프리미엄", "Lexus ES", "350e Premium"),
+    ("렉서스", "렉서스 ES", "ES 350e 럭셔리", "Lexus ES", "350e Luxury"),
+    ("렉서스", "렉서스 ES", "ES 350e VIP", "Lexus ES", "350e VIP"),
+    ("렉서스", "렉서스 ES", "ES 500e 프리미엄", "Lexus ES", "500e Premium"),
+    ("렉서스", "렉서스 ES", "ES 500e 럭셔리", "Lexus ES", "500e Luxury"),
     ("폴스타", "폴스타 폴스타 3", "리어 모터", "Polestar 3", "Rear motor"),
     ("폴스타", "폴스타 폴스타 3", "듀얼 모터", "Polestar 3", "Dual motor"),
     ("폴스타", "폴스타 폴스타 3", "퍼포먼스", "Polestar 3", "Performance"),
@@ -262,6 +267,27 @@ def update_app(
     changed_prices: list[str] = []
 
     for (model, trim), observed in prices.items():
+        if model == "Lexus ES":
+            if observed["modelYear"] != 27:
+                raise RuntimeError(f"Unexpected Lexus ES model year: {trim}")
+            pattern = re.compile(
+                rf"lexusGetchaPrice\('{re.escape(trim)}',"
+                rf"(?P<msrp>\d+),(?P<promo>\d+),'[^']*'\)"
+            )
+            matches = list(pattern.finditer(app))
+            if len(matches) != 1:
+                raise RuntimeError(f"Lexus ES app trim call missing or ambiguous: {trim}")
+            match_lexus = matches[0]
+            if (int(match_lexus.group("msrp")), int(match_lexus.group("promo"))) != (
+                observed["msrp"], observed["promo"]
+            ):
+                changed_prices.append(f"{model} / {trim}")
+            replacement_lexus = (
+                f"lexusGetchaPrice('{trim}',{observed['msrp']},"
+                f"{observed['promo']},'{checked_at}')"
+            )
+            app = app[:match_lexus.start()] + replacement_lexus + app[match_lexus.end():]
+            continue
         target = data["prices"].get(model, {}).get(trim)
         if target is None:
             raise RuntimeError(f"App trim key missing: {model} / {trim}")
@@ -288,6 +314,9 @@ def update_app(
         target["promotionCheckedAt"] = checked_at
         target["getchaMatchKey"] = f"{model} / {trim}"
 
+    match = re.search(r"window\.ES90_DATA\s*=\s*(\{[\s\S]*?\});</script>", app)
+    if not match:
+        raise RuntimeError("window.ES90_DATA was lost from app.html")
     replacement = "window.ES90_DATA = " + json.dumps(
         data, ensure_ascii=False, indent=2
     ) + ";</script>"

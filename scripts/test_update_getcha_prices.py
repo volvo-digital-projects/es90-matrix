@@ -144,6 +144,45 @@ class UpdateGetchaPricesTests(unittest.TestCase):
             update_getcha_prices.MATCHES,
         )
 
+    def test_lexus_prices_are_in_daily_getcha_matches(self) -> None:
+        lexus = [item for item in update_getcha_prices.MATCHES if item[3] == "Lexus ES"]
+        self.assertEqual({item[4] for item in lexus}, {
+            "350e Premium", "350e Luxury", "350e VIP", "500e Premium", "500e Luxury"
+        })
+
+    def test_lexus_matched_trim_updates_without_stamping_unmatched_trim(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            app_path = root / "app.html"
+            state_path = root / "getcha-price-state.json"
+            app_path.write_text(
+                '<script>window.ES90_DATA = {"prices":{}};</script>\n'
+                "'500e Premium': lexusGetchaPrice('500e Premium',77000000,0,'2026-09-28'),\n"
+                "'500e Luxury': lexusGetchaPrice('500e Luxury',84900000,0,'2026-09-28')",
+                encoding="utf-8",
+            )
+            prices = {("Lexus ES", "500e Premium"): {
+                "msrp": 78000000, "promo": 1000000,
+                "discountedPrice": 77000000, "modelYear": 27,
+            }}
+            with (
+                patch.object(update_getcha_prices, "APP_PATH", app_path),
+                patch.object(update_getcha_prices, "STATE_PATH", state_path),
+            ):
+                changed, checked_at = update_getcha_prices.update_app(
+                    prices, ["Lexus ES / 500e Luxury: exact match failed"]
+                )
+            updated = app_path.read_text(encoding="utf-8")
+            self.assertEqual(changed, ["Lexus ES / 500e Premium"])
+            self.assertIn(
+                f"lexusGetchaPrice('500e Premium',78000000,1000000,'{checked_at}')",
+                updated,
+            )
+            self.assertIn(
+                "lexusGetchaPrice('500e Luxury',84900000,0,'2026-09-28')",
+                updated,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
