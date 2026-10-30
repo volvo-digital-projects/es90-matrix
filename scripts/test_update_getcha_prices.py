@@ -159,6 +159,34 @@ class UpdateGetchaPricesTests(unittest.TestCase):
             "msrp": 77000000, "promo": 0, "discountedPrice": 77000000
         })
 
+    def test_lexus_without_discount_still_refreshes_checked_date(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            app_path = root / "app.html"
+            state_path = root / "getcha-price-state.json"
+            app_path.write_text(
+                '<script>window.ES90_DATA = {"prices":{}};</script>\n'
+                "'500e Premium': lexusGetchaPrice('500e Premium',77000000,0,'2026-09-28')",
+                encoding="utf-8",
+            )
+            observed = update_getcha_prices.parse_exact_price(
+                "ES 500e 프리미엄 (2026.09) 7,700 만원 - -",
+                "ES 500e 프리미엄",
+            )
+            observed["modelYear"] = 27
+            with (
+                patch.object(update_getcha_prices, "APP_PATH", app_path),
+                patch.object(update_getcha_prices, "STATE_PATH", state_path),
+            ):
+                changed, checked_at = update_getcha_prices.update_app(
+                    {("Lexus ES", "500e Premium"): observed}, []
+                )
+            self.assertEqual(changed, [])
+            self.assertIn(
+                f"lexusGetchaPrice('500e Premium',77000000,0,'{checked_at}')",
+                app_path.read_text(encoding="utf-8"),
+            )
+
     def test_lexus_matched_trim_updates_without_stamping_unmatched_trim(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
