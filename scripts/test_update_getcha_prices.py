@@ -132,6 +132,42 @@ class UpdateGetchaPricesTests(unittest.TestCase):
         self.assertEqual(selected["text"], "new")
         self.assertEqual(update_getcha_prices.section_model_year(selected), 27)
 
+    def test_exact_p2_trim_falls_back_to_26_model_year(self) -> None:
+        sections = [
+            {
+                "title": "BMW i5 (27년식)",
+                "text": "xDrive 40 M 스포츠 (2026.10) 10,600 만원 - -",
+            },
+            {
+                "title": "BMW i5 (26년식)",
+                "text": "단종 전 완판 xDrive 40 M 스포츠 P2 (2026.07) "
+                "10,600 만원 - -",
+            },
+        ]
+        section, observed = update_getcha_prices.section_with_exact_trim(
+            sections, "BMW i5", "xDrive 40 M 스포츠 P2"
+        )
+        self.assertEqual(update_getcha_prices.section_model_year(section), 26)
+        self.assertEqual(observed["msrp"], 106000000)
+        self.assertEqual(observed["promo"], 0)
+
+    def test_exact_trim_prefers_newest_year_when_both_match(self) -> None:
+        sections = [
+            {
+                "title": "테슬라 모델 Y (26년식)",
+                "text": "L 프리미엄 AWD (2026.07) 7,200 만원 - -",
+            },
+            {
+                "title": "테슬라 모델 Y (27년식)",
+                "text": "L 프리미엄 AWD (2026.10) 7,299 만원 - -",
+            },
+        ]
+        section, observed = update_getcha_prices.section_with_exact_trim(
+            sections, "테슬라 모델 Y", "L 프리미엄 AWD"
+        )
+        self.assertEqual(update_getcha_prices.section_model_year(section), 27)
+        self.assertEqual(observed["msrp"], 72990000)
+
     def test_tesla_model_y_uses_latest_longwheelbase_grade(self) -> None:
         self.assertIn(
             (

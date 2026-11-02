@@ -52,9 +52,12 @@ jobs:
                   checked_date = datetime.fromisoformat(checked_at).astimezone(
                       ZoneInfo("Asia/Seoul")
                   ).date()
-                  should_run = checked_date < datetime.now(
-                      ZoneInfo("Asia/Seoul")
-                  ).date()
+                  state_path = Path("automation/getcha-price-state.json")
+                  state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {}
+                  should_run = (
+                      checked_date < datetime.now(ZoneInfo("Asia/Seoul")).date()
+                      or state.get("unmatchedTrimCount", 0) > 0
+                  )
 
           with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
               output.write(f"should_run={'true' if should_run else 'false'}\n")

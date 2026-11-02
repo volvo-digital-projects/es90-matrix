@@ -69,6 +69,30 @@ def newest_section(sections: list[dict], model_label: str) -> dict:
     return max(candidates, key=section_model_year)
 
 
+def section_with_exact_trim(
+    sections: list[dict], model_label: str, exact_trim: str
+) -> tuple[dict, dict]:
+    candidates = sorted(
+        (
+            section for section in sections
+            if normalize(section["title"]).startswith(model_label)
+        ),
+        key=section_model_year,
+        reverse=True,
+    )
+    if not candidates:
+        raise RuntimeError(f"Getcha model not found: {model_label}")
+    for section in candidates:
+        try:
+            return section, parse_exact_price(section["text"], exact_trim)
+        except RuntimeError as error:
+            if not str(error).startswith("Exact Getcha trim price match failed:"):
+                raise
+    raise RuntimeError(
+        f"Exact Getcha trim not found in any model year: {model_label} / {exact_trim}"
+    )
+
+
 def parse_exact_price(section_text: str, exact_trim: str) -> dict:
     pattern = re.compile(
         rf"(?:제조사판매\s+)?{re.escape(exact_trim)}"
@@ -205,10 +229,23 @@ def read_getcha_prices() -> tuple[dict[tuple[str, str], dict], list[str]]:
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 1400, "height": 1100})
-        page.goto(GETCHA_URL, wait_until="domcontentloaded", timeout=60_000)
-        page.get_by_role("heading", name="BMW", exact=True).wait_for(
-            state="visible", timeout=30_000
-        )
+        for attempt in range(1, 4):
+            response = page.goto(
+                GETCHA_URL, wait_until="domcontentloaded", timeout=60_000
+            )
+            if response is not None and response.ok:
+                try:
+                    page.get_by_role("heading", name="브랜드 선택").wait_for(
+                        state="visible", timeout=15_000
+                    )
+                    break
+                except PlaywrightTimeoutError:
+                    pass
+            if attempt == 3:
+                raise RuntimeError(
+                    "Getcha brand selector did not load after 3 attempts; "
+                    f"HTTP status={response.status if response else 'none'}"
+                )
 
         for brand in brands:
             brand_matches = [
@@ -233,9 +270,8 @@ def read_getcha_prices() -> tuple[dict[tuple[str, str], dict], list[str]]:
                 app_trim,
             ) in brand_matches:
                 try:
-                    section = newest_section(sections, getcha_model)
-                    observed = parse_exact_price(
-                        section["text"], getcha_trim
+                    section, observed = section_with_exact_trim(
+                        sections, getcha_model, getcha_trim
                     )
                     observed["modelYear"] = section_model_year(section)
                     collected[(app_model, app_trim)] = observed
