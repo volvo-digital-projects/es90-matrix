@@ -228,7 +228,10 @@ def read_getcha_prices() -> tuple[dict[tuple[str, str], dict], list[str]]:
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
-        page = browser.new_page(viewport={"width": 1400, "height": 1100})
+        page = browser.new_page(
+            viewport={"width": 1400, "height": 1100},
+            user_agent="ES90-Matrix-Price-Checker/1.0",
+        )
         for attempt in range(1, 4):
             response = page.goto(
                 GETCHA_URL, wait_until="domcontentloaded", timeout=60_000
