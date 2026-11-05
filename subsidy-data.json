@@ -5,7 +5,7 @@
     "paymentUrl": "https://ev.or.kr/nportal/buySupprt/initSubsidyPaymentCheckAction.do",
     "priceUrl": "https://ev.or.kr/nportal/buySupprt/initPsLocalCarPirceAction.do"
   },
-  "checkedAt": "2026-11-05T22:07:09+09:00",
+  "checkedAt": "2026-11-06T04:08:44+09:00",
   "year": 2026,
   "vehicleType": "전기승용",
   "allocationBasis": "전기승용 전체",
@@ -888,7 +888,7 @@
       "sido": "강원특별자치도",
       "sigungu": "평창군",
       "announced": 130,
-      "received": 131,
+      "received": 115,
       "selected": 115,
       "delivered": 107,
       "selectionRemaining": 15,
