@@ -2,9 +2,10 @@ name: Update 350kW charger data
 
 on:
   schedule:
-    # Retry hourly from 06:20 through 18:20 Asia/Seoul.
-    # Once today's check succeeds, later scheduled retries are skipped.
-    - cron: "20 21-23,0-9 * * *"
+    # 06:00, 10:00, 14:00, 18:00 KST. Retry incomplete slots at +5/+10/+20/+40 minutes.
+    - cron: "0,5,10,20,40 1,5,9,21 * * *"
+    # Continue retrying incomplete slots every 30 minutes until the next slot.
+    - cron: "0,30 0,2-4,6-8,10-20,22-23 * * *"
   workflow_dispatch:
 
 permissions:
@@ -31,7 +32,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Check whether today's map and charger data were already verified
+      - name: Check whether the latest charger and TMAP slot is complete
         id: daily
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -39,32 +40,19 @@ jobs:
           python - <<'PY'
           import json
           import os
-          from datetime import datetime
           from pathlib import Path
-          from zoneinfo import ZoneInfo
+          from scripts.update_slots import latest_slot, slot_needs_update
 
+          slot = None
           should_run = True
-          checked_at = None
           if os.environ.get("EVENT_NAME") == "schedule":
+              slot = latest_slot()
               data = json.loads(Path("version.json").read_text(encoding="utf-8"))
-              checked_at = data.get("chargerCheckedAt")
-              tmap_checked_at = data.get("tmapCheckedAt")
-              today = datetime.now(ZoneInfo("Asia/Seoul")).date()
-              if checked_at and tmap_checked_at:
-                  checked_date = datetime.fromisoformat(checked_at).astimezone(
-                      ZoneInfo("Asia/Seoul")
-                  ).date()
-                  tmap_checked_date = datetime.fromisoformat(
-                      tmap_checked_at
-                  ).astimezone(ZoneInfo("Asia/Seoul")).date()
-                  should_run = checked_date < today or tmap_checked_date < today
+              should_run = slot is not None and slot_needs_update(slot, data.get("chargerCheckedAt"), data.get("tmapCheckedAt"))
 
           with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
               output.write(f"should_run={'true' if should_run else 'false'}\n")
-          print(
-              f"Charger daily check: previous={checked_at or 'none'}, "
-              f"should_run={should_run}"
-          )
+          print(f"Collection slot: target={slot or 'manual'}, should_run={should_run}")
           PY
 
       - name: Verify TMAP SDK and app key

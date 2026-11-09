@@ -2,10 +2,10 @@ name: Update nationwide EV subsidy data
 
 on:
   schedule:
-    # Retry the four required Asia/Seoul slots away from top-of-hour congestion.
-    # 08:07/11:07/14:07/17:07, then :27/:47 retries (the first success closes the slot).
-    # The slot guard below skips every retry after the first successful check.
-    - cron: "7,27,47 23,2,5,8 * * *"
+    # 06:00, 10:00, 14:00, 18:00 KST. Retry incomplete slots at +5/+10/+20/+40 minutes.
+    - cron: "0,5,10,20,40 1,5,9,21 * * *"
+    # Continue retrying incomplete slots every 30 minutes until the next slot.
+    - cron: "0,30 0,2-4,6-8,10-20,22-23 * * *"
   workflow_call:
     inputs:
       check_required_slot:
@@ -39,51 +39,27 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Check whether the latest required subsidy slot was already verified
+      - name: Check whether the latest subsidy slot is complete
         id: slot
         env:
-          EVENT_NAME: ${{ github.event_name }}
           CHECK_REQUIRED_SLOT: ${{ github.event_name == 'schedule' || inputs.check_required_slot || false }}
         run: |
           python - <<'PY'
           import json
           import os
-          from datetime import datetime
           from pathlib import Path
-          from zoneinfo import ZoneInfo
+          from scripts.update_slots import latest_slot, slot_needs_update
 
+          slot = None
           should_run = True
-          checked_at = None
-          required_slot = None
-          if os.environ.get("CHECK_REQUIRED_SLOT") == "true":
-              seoul = ZoneInfo("Asia/Seoul")
-              now = datetime.now(seoul)
-              required_hours = (8, 11, 14, 17)
-              eligible_slots = [
-                  now.replace(hour=hour, minute=0, second=0, microsecond=0)
-                  for hour in required_hours
-                  if now.hour >= hour
-              ]
-              required_slot = max(eligible_slots, default=None)
+          if os.environ.get("CHECK_REQUIRED_SLOT", "false").lower() == "true":
+              slot = latest_slot()
               data = json.loads(Path("version.json").read_text(encoding="utf-8"))
-              checked_at = data.get("subsidyCheckedAt")
-              checked_time = (
-                  datetime.fromisoformat(checked_at).astimezone(seoul)
-                  if checked_at
-                  else None
-              )
-              should_run = (
-                  required_slot is not None
-                  and (checked_time is None or checked_time < required_slot)
-              )
+              should_run = slot is not None and slot_needs_update(slot, data.get("subsidyCheckedAt"))
 
           with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
               output.write(f"should_run={'true' if should_run else 'false'}\n")
-          print(
-              f"Subsidy slot check: required={required_slot or 'manual'}, "
-              f"previous={checked_at or 'none'}, "
-              f"should_run={should_run}"
-          )
+          print(f"Collection slot: target={slot or 'manual'}, should_run={should_run}")
           PY
 
       - name: Install browser and HTML parsers

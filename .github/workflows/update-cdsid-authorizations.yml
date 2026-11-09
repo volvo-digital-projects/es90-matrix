@@ -2,8 +2,10 @@ name: Update CDSID authorizations
 
 on:
   schedule:
-    # Asia/Seoul 09:07/09:27/09:47. Later attempts are skipped after success.
-    - cron: "7,27,47 0 * * *"
+    # 06:00, 10:00, 14:00, 18:00 KST. Retry incomplete slots at +5/+10/+20/+40 minutes.
+    - cron: "0,5,10,20,40 1,5,9,21 * * *"
+    # Continue retrying incomplete slots every 30 minutes until the next slot.
+    - cron: "0,30 0,2-4,6-8,10-20,22-23 * * *"
   workflow_dispatch:
 
 permissions:
@@ -15,7 +17,7 @@ concurrency:
 
 jobs:
   update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     steps:
@@ -30,7 +32,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Check whether today's CDSID roster was already verified
+      - name: Check whether the latest CDSID slot is complete
         id: slot
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -38,34 +40,19 @@ jobs:
           python - <<'PY'
           import json
           import os
-          from datetime import datetime
           from pathlib import Path
-          from zoneinfo import ZoneInfo
+          from scripts.update_slots import latest_slot, slot_needs_update
 
+          slot = None
           should_run = True
-          checked_at = None
-          required = None
           if os.environ.get("EVENT_NAME") == "schedule":
-              seoul = ZoneInfo("Asia/Seoul")
-              now = datetime.now(seoul)
-              required = now.replace(hour=9, minute=0, second=0, microsecond=0)
+              slot = latest_slot()
               data = json.loads(Path("version.json").read_text(encoding="utf-8"))
-              checked_at = data.get("cdsidCheckedAt")
-              checked_time = (
-                  datetime.fromisoformat(checked_at).astimezone(seoul)
-                  if checked_at
-                  else None
-              )
-              should_run = now >= required and (
-                  checked_time is None or checked_time.date() < now.date()
-              )
+              should_run = slot is not None and slot_needs_update(slot, data.get("cdsidCheckedAt"))
 
           with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
               output.write(f"should_run={'true' if should_run else 'false'}\n")
-          print(
-              f"CDSID daily check: required={required or 'manual'}, "
-              f"previous={checked_at or 'none'}, should_run={should_run}"
-          )
+          print(f"Collection slot: target={slot or 'manual'}, should_run={should_run}")
           PY
 
       - name: Install browser
@@ -90,20 +77,33 @@ jobs:
         run: |
           git config user.name "ES90 Auto Update"
           git config user.email "actions@users.noreply.github.com"
-          python scripts/update_version_metadata.py --cdsid-checked-at "$CHECKED_AT"
-          git add app.html version.json
+          git add app.html
           if [ "$ACCESS_CHANGED" = "true" ]; then
             git commit -m "Auto update Sales-DMS login access"
-          else
-            git commit -m "Record Sales-DMS access check"
+            for attempt in 1 2 3 4 5; do
+              if git push; then
+                break
+              fi
+              if [ "$attempt" = 5 ]; then
+                echo "Unable to publish CDSID access changes." >&2
+                exit 1
+              fi
+              git pull --rebase -X theirs origin main
+              sleep $((attempt * 2))
+            done
           fi
 
           for attempt in 1 2 3 4 5; do
+            git pull --ff-only origin main
+            python scripts/update_version_metadata.py --cdsid-checked-at "$CHECKED_AT"
+            git add version.json
+            git commit -m "Record Sales-DMS access check"
             if git push; then
               exit 0
             fi
-            echo "Push raced with another update; rebasing (attempt ${attempt}/5)."
-            git pull --rebase -X theirs origin main
+            # Regenerate this one field against the latest metadata on the next attempt.
+            git reset --soft HEAD^
+            git restore --staged --worktree -- version.json
             sleep $((attempt * 2))
           done
 
