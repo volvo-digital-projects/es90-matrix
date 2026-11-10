@@ -5,7 +5,7 @@
     "paymentUrl": "https://ev.or.kr/nportal/buySupprt/initSubsidyPaymentCheckAction.do",
     "priceUrl": "https://ev.or.kr/nportal/buySupprt/initPsLocalCarPirceAction.do"
   },
-  "checkedAt": "2026-11-10T19:51:15+09:00",
+  "checkedAt": "2026-11-11T08:41:46+09:00",
   "year": 2026,
   "vehicleType": "전기승용",
   "allocationBasis": "전기승용 전체",
@@ -56,9 +56,9 @@
       "announced": 19648,
       "received": 19618,
       "selected": 19525,
-      "delivered": 18702,
+      "delivered": 18708,
       "selectionRemaining": 123,
-      "remaining": 946,
+      "remaining": 940,
       "nationalMaxManwon": 648,
       "localMaxManwon": 194,
       "combinedMaxManwon": 842,
@@ -102,7 +102,7 @@
       "announced": 5187,
       "received": 5577,
       "selected": 5576,
-      "delivered": 5432,
+      "delivered": 5433,
       "selectionRemaining": 0,
       "remaining": 0,
       "nationalMaxManwon": 648,
@@ -123,8 +123,8 @@
       "sido": "인천광역시",
       "sigungu": "인천광역시",
       "announced": 9036,
-      "received": 9162,
-      "selected": 9123,
+      "received": 9159,
+      "selected": 9122,
       "delivered": 9074,
       "selectionRemaining": 0,
       "remaining": 0,
@@ -135,11 +135,11 @@
       "applicationDeadline": "2026.11.30 18:00",
       "notice": "본공고 1 / 본공고 2 / 추경1차 1 / 추경1차 2",
       "selectionBreakdown": {
-        "general": 5642,
+        "general": 5641,
         "priority": 2986,
         "taxi": 346,
         "corporate": 149,
-        "total": 9123
+        "total": 9122
       }
     },
     {
@@ -1022,7 +1022,7 @@
       "sido": "충청북도",
       "sigungu": "청주시",
       "announced": 2250,
-      "received": 3270,
+      "received": 3265,
       "selected": 2809,
       "delivered": 2775,
       "selectionRemaining": 0,
