@@ -18557,15 +18557,15 @@ window.addEventListener('touchcancel',finishStep3TouchGesture,{passive:true});
 // ---------------- STEP 1: ES90 trim ----------------
 // item: ES90 실시간 예약(잔여계약) 현황 — 대기고객의 선택 섹션에 쓰임. 추후 실데이터 연동 시 이 객체만 교체하면 됨.
 const RESERVATION_DATA = {
-  total: 2564,
+  total: 2538,
   previousDayTotal: 2562,
   byTrim: [
-    {trim:'Single Motor Ultra', count:1336, airSuspension:true},
-    {trim:'Twin Motor Ultra', count:922, airSuspension:true},
+    {trim:'Single Motor Ultra', count:1329, airSuspension:true},
+    {trim:'Twin Motor Ultra', count:904, airSuspension:true},
     {trim:'Twin Motor Performance Ultra', count:125},
     {trim:'Single Motor Ultra', count:77, airSuspension:false, variant:'No Air Sus'},
     {trim:'Single Motor Plus', count:63},
-    {trim:'Twin Motor Ultra', count:26, airSuspension:false, variant:'No Air Sus'},
+    {trim:'Twin Motor Ultra', count:25, airSuspension:false, variant:'No Air Sus'},
     {trim:'Twin Motor Plus', count:15}
   ]
 };
@@ -18614,7 +18614,7 @@ function syncLoginUpdateStamp(){
   time.textContent = `${updatedAt} 기준`;
   badge.setAttribute('aria-label', `업데이트 ${updatedAt} 기준`);
 }
-let RESERVATION_UPDATED_AT = '2026-11-11 06:00';
+let RESERVATION_UPDATED_AT = '2026-11-11 10:00';
 function formatDeploymentUpdatedAt(value){
   const date = new Date(value);
   if(Number.isNaN(date.getTime())) return null;
