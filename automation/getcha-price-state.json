@@ -1,14 +1,9 @@
 {
-  "checkedAt": "2026-11-14T10:11:46+09:00",
+  "checkedAt": "2026-11-14T16:38:48+09:00",
   "expectedTrimCount": 26,
   "matchedTrimCount": 26,
   "unmatchedTrimCount": 0,
   "unmatchedTrims": [],
-  "priceChangedTrimCount": 4,
-  "priceChangedTrims": [
-    "Hyundai / Premium",
-    "Hyundai / Exclusive",
-    "Hyundai / Calligraphy",
-    "Hyundai / Black Ink"
-  ]
+  "priceChangedTrimCount": 0,
+  "priceChangedTrims": []
 }
