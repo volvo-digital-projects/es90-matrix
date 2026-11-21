@@ -18560,8 +18560,8 @@ const RESERVATION_DATA = {
   total: 2315,
   previousDayTotal: 2315,
   byTrim: [
-    {trim:'Single Motor Ultra', count:1234, airSuspension:true},
-    {trim:'Twin Motor Ultra', count:794, airSuspension:true},
+    {trim:'Single Motor Ultra', count:1233, airSuspension:true},
+    {trim:'Twin Motor Ultra', count:795, airSuspension:true},
     {trim:'Twin Motor Performance Ultra', count:118},
     {trim:'Single Motor Ultra', count:72, airSuspension:false, variant:'No Air Sus'},
     {trim:'Single Motor Plus', count:60},
@@ -18614,7 +18614,7 @@ function syncLoginUpdateStamp(){
   time.textContent = `${updatedAt} 기준`;
   badge.setAttribute('aria-label', `업데이트 ${updatedAt} 기준`);
 }
-let RESERVATION_UPDATED_AT = '2026-11-21 09:07';
+let RESERVATION_UPDATED_AT = '2026-11-21 11:00';
 function formatDeploymentUpdatedAt(value){
   const date = new Date(value);
   if(Number.isNaN(date.getTime())) return null;
