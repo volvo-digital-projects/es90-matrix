@@ -1,14 +1,14 @@
 {
-  "observationDate": "2026-11-25",
-  "observedAt": "2026-11-25T18:05:22+09:00",
-  "total": 2188,
-  "previousDayTotal": 2237,
-  "finalUpdateDate": "2026-11-25",
-  "finalUpdateTotal": 2188,
+  "observationDate": "2026-11-26",
+  "observedAt": "2026-11-26T08:06:22+09:00",
+  "total": 2189,
+  "previousDayTotal": 2188,
+  "finalUpdateDate": "2026-11-26",
+  "finalUpdateTotal": 2189,
   "byTrim": [
     {
       "trim": "Single Motor Ultra",
-      "count": 1186,
+      "count": 1187,
       "airSuspension": true
     },
     {
